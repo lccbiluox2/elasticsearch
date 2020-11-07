@@ -27,6 +27,7 @@ import java.io.IOException;
  * periodically in order to check for changes in different external resources.
  *
  * 通用资源监视服务
+ *
  */
 public interface ResourceWatcher {
     /**
