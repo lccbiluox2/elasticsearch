@@ -478,11 +478,14 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
     }
 
     private void callClusterStateAppliers(ClusterChangedEvent clusterChangedEvent) {
+        // 遍历全部的applier 依次调用各模块对集群状态的处理
         clusterStateAppliers.forEach(applier -> {
             try {
                 logger.trace("calling [{}] with change to version [{}]", applier, clusterChangedEvent.state().version());
+                // 调用各模块实现的 applyClusterState
                 applier.applyClusterState(clusterChangedEvent);
             } catch (Exception ex) {
+                // 某个模块应用集群状态出现异常时打印日志，但应用过程不会终止
                 logger.warn("failed to notify ClusterStateApplier", ex);
             }
         });

@@ -46,6 +46,10 @@ import org.elasticsearch.common.settings.Settings;
  * <li>{@code always} - Re-balancing is allowed once a shard replication group
  * is active</li>
  * </ul>
+ *
+ * 通过集群中active的shard状态来决定是否可以执行rebalance,通过下面的配置控制，
+ * 可以动态生效:
+ * cluster. routing. allocation.allow_ rebalance
  */
 public class ClusterRebalanceAllocationDecider extends AllocationDecider {
 

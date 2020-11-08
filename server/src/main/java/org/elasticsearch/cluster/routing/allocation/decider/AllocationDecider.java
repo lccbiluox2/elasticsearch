@@ -35,6 +35,8 @@ public abstract class AllocationDecider {
      * Returns a {@link Decision} whether the given shard routing can be
      * re-balanced to the given allocation. The default is
      * {@link Decision#ALWAYS}.
+     *
+     * 给定分片是否可以 re-balanced 到给定的 allocation
      */
     public Decision canRebalance(ShardRouting shardRouting, RoutingAllocation allocation) {
         return Decision.ALWAYS;
@@ -43,6 +45,8 @@ public abstract class AllocationDecider {
     /**
      * Returns a {@link Decision} whether the given shard routing can be
      * allocated on the given node. The default is {@link Decision#ALWAYS}.
+     *
+     * 给定分片是否可以分片到给定节点
      */
     public Decision canAllocate(ShardRouting shardRouting, RoutingNode node, RoutingAllocation allocation) {
         return Decision.ALWAYS;
@@ -51,6 +55,8 @@ public abstract class AllocationDecider {
     /**
      * Returns a {@link Decision} whether the given shard routing can be remain
      * on the given node. The default is {@link Decision#ALWAYS}.
+     *
+     * 给定分片是否可以保留在给定节点
      */
     public Decision canRemain(ShardRouting shardRouting, RoutingNode node, RoutingAllocation allocation) {
         return Decision.ALWAYS;
@@ -98,6 +104,8 @@ public abstract class AllocationDecider {
      * the results of {@link #canAllocate(ShardRouting, RoutingNode, RoutingAllocation)}
      * before making a decision on force allocation, because force allocation should only
      * be considered if all deciders return {@link Decision#NO}.
+     *
+     * 给定主分片是否可以强制分片在给定节点
      */
     public Decision canForceAllocatePrimary(ShardRouting shardRouting, RoutingNode node, RoutingAllocation allocation) {
         assert shardRouting.primary() : "must not call canForceAllocatePrimary on a non-primary shard " + shardRouting;

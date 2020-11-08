@@ -107,10 +107,13 @@ public abstract class MetaDataStateFormat<T> {
         final String fileName = prefix + maxStateId + STATE_FILE_EXTENSION;
         Path stateLocation = locations[0].resolve(STATE_DIR_NAME);
         Files.createDirectories(stateLocation);
+        // 临时文件名
         final Path tmpStatePath = stateLocation.resolve(fileName + ".tmp");
+        // 目标文件名
         final Path finalStatePath = stateLocation.resolve(fileName);
         try {
             final String resourceDesc = "MetaDataStateFormat.write(path=\"" + tmpStatePath + "\")";
+            // 写临时文件
             try (OutputStreamIndexOutput out =
                      new OutputStreamIndexOutput(resourceDesc, fileName, Files.newOutputStream(tmpStatePath), BUFFER_SIZE)) {
                 CodecUtil.writeHeader(out, STATE_FILE_CODEC, STATE_FILE_VERSION);
@@ -130,7 +133,9 @@ public abstract class MetaDataStateFormat<T> {
                 }
                 CodecUtil.writeFooter(out);
             }
+            // 从系统cache刷到磁盘中，保证持久化
             IOUtils.fsync(tmpStatePath, false); // fsync the state file
+            // move为目标文件，move操作为系统原子操作
             Files.move(tmpStatePath, finalStatePath, StandardCopyOption.ATOMIC_MOVE);
             IOUtils.fsync(stateLocation, true);
             logger.trace("written state to {}", finalStatePath);

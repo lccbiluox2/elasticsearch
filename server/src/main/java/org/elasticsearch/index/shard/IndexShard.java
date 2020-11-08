@@ -1405,6 +1405,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
         while ((operation = snapshot.next()) != null) {
             try {
                 logger.trace("[translog] recover op {}", operation);
+                // 执行集体的写操作
                 Engine.Result result = applyTranslogOperation(engine, operation, origin);
                 switch (result.getResultType()) {
                     case FAILURE:
@@ -2389,6 +2390,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
                 markAsRecovering("from store", recoveryState); // mark the shard as recovering on the cluster state thread
                 threadPool.generic().execute(() -> {
                     try {
+                        // 主分片从本地恢复
                         if (recoverFromStore()) {
                             recoveryListener.onRecoveryDone(recoveryState);
                         }
@@ -2401,6 +2403,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
             case PEER:
                 try {
                     markAsRecovering("from " + recoveryState.getSourceNode(), recoveryState);
+                    // 副分片从远程主分片恢复
                     recoveryTargetService.startRecovery(this, recoveryState.getSourceNode(), recoveryListener);
                 } catch (Exception e) {
                     failShard("corrupted preexisting index", e);
@@ -2409,6 +2412,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
                 }
                 break;
             case SNAPSHOT:
+                // 从快照开始恢复
                 markAsRecovering("from snapshot", recoveryState); // mark the shard as recovering on the cluster state thread
                 SnapshotRecoverySource recoverySource = (SnapshotRecoverySource) recoveryState.getRecoverySource();
                 threadPool.generic().execute(() -> {
@@ -2424,6 +2428,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
                 });
                 break;
             case LOCAL_SHARDS:
+                // 从本节点的其他分片进行恢复
                 final IndexMetaData indexMetaData = indexSettings().getIndexMetaData();
                 final Index resizeSourceIndex = indexMetaData.getResizeSourceIndex();
                 final List<IndexShard> startedShards = new ArrayList<>();

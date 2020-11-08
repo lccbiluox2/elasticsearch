@@ -25,6 +25,8 @@ import org.elasticsearch.cluster.routing.allocation.RoutingAllocation;
 
 /**
  * An allocation strategy that only allows for a replica to be allocated when the primary is active.
+ *
+ * 保证只在主分片分配完毕才开始分配分配副本
  */
 public class ReplicaAfterPrimaryActiveAllocationDecider extends AllocationDecider {
 

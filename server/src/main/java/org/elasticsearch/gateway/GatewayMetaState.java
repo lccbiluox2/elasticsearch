@@ -130,6 +130,7 @@ public class GatewayMetaState implements ClusterStateApplier {
         Set<Index> relevantIndices = Collections.emptySet();
         boolean success = true;
         // write the state if this node is a master eligible node or if it is a data node and has shards allocated on it
+        // 只有基本master资格的节点和数据节点才会被持久化元数据
         if (state.nodes().getLocalNode().isMasterNode() || state.nodes().getLocalNode().isDataNode()) {
             if (previousMetaData == null) {
                 try {
@@ -158,6 +159,7 @@ public class GatewayMetaState implements ClusterStateApplier {
                 }
             }
             // check if the global state changed?
+            // 检查全局元信息是否发生变化，如果有变化，则将其写入到磁盘
             if (previousMetaData == null || !MetaData.isGlobalStateEquals(previousMetaData, newMetaData)) {
                 try {
                     metaStateService.writeGlobalState("changed", newMetaData);
@@ -171,6 +173,7 @@ public class GatewayMetaState implements ClusterStateApplier {
             final Iterable<IndexMetaWriteInfo> writeInfo = resolveStatesToBeWritten(previouslyWrittenIndices, relevantIndices,
                 previousMetaData, event.state().metaData());
             // check and write changes in indices
+            // 将变发生变化的索引级元数据写入到磁盘
             for (IndexMetaWriteInfo indexMetaWrite : writeInfo) {
                 try {
                     metaStateService.writeIndex(indexMetaWrite.reason, indexMetaWrite.newMetaData);

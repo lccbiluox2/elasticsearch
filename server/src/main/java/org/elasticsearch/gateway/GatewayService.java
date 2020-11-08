@@ -52,16 +52,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GatewayService extends AbstractLifecycleComponent implements ClusterStateListener {
     private static final Logger logger = LogManager.getLogger(GatewayService.class);
 
+    /**
+     * gateway. expected_ nodes,
+     * 预期的节点数。加入集群的节点数(数据节点或具备Master
+     * 资格的节点)达到这个数量后立即开始gateway的恢复。默认为0。
+     */
     public static final Setting<Integer> EXPECTED_NODES_SETTING =
         Setting.intSetting("gateway.expected_nodes", -1, -1, Property.NodeScope);
     public static final Setting<Integer> EXPECTED_DATA_NODES_SETTING =
         Setting.intSetting("gateway.expected_data_nodes", -1, -1, Property.NodeScope);
     public static final Setting<Integer> EXPECTED_MASTER_NODES_SETTING =
         Setting.intSetting("gateway.expected_master_nodes", -1, -1, Property.NodeScope);
+    /**
+     * gateway. recover_ after_ time， 如果没有达到预期的节点数量，则恢复过程将等待
+     * 配置的时间，再尝试恢复。默认为5min。.
+     */
     public static final Setting<TimeValue> RECOVER_AFTER_TIME_SETTING =
         Setting.positiveTimeSetting("gateway.recover_after_time", TimeValue.timeValueMillis(0), Property.NodeScope);
     public static final Setting<Integer> RECOVER_AFTER_NODES_SETTING =
         Setting.intSetting("gateway.recover_after_nodes", -1, -1, Property.NodeScope);
+    /**
+     * gateway. recover_ after_ nodes， 只要配置数量的节点(数据节点或具备Master资
+     * 格的节点)加入集群就可以开始恢复。
+     */
     public static final Setting<Integer> RECOVER_AFTER_DATA_NODES_SETTING =
         Setting.intSetting("gateway.recover_after_data_nodes", -1, -1, Property.NodeScope);
     public static final Setting<Integer> RECOVER_AFTER_MASTER_NODES_SETTING =

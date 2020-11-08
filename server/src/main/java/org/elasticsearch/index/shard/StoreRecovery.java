@@ -366,6 +366,7 @@ final class StoreRecovery {
         indexShard.prepareForIndexRecovery();
         long version = -1;
         SegmentInfos si = null;
+        // 从lucence 读取最后一次提交的分段信息，获取其中的版本号，更新当前索引版本
         final Store store = indexShard.store();
         store.incRef();
         try {

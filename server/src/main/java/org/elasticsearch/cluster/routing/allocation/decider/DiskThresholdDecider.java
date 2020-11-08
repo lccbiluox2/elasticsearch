@@ -67,6 +67,8 @@ import static org.elasticsearch.cluster.routing.allocation.DiskThresholdSettings
  *
  * <code>cluster.routing.allocation.disk.threshold_enabled</code> is used to
  * enable or disable this decider. It defaults to false (disabled).
+ *
+ * 根据磁盘空间进行决策的分配器
  */
 public class DiskThresholdDecider extends AllocationDecider {
 

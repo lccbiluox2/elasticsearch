@@ -50,6 +50,8 @@ import java.util.function.BiPredicate;
  * Note: Reducing the number of shards per node via the index update API can
  * trigger relocation and significant additional load on the clusters nodes.
  * </p>
+ *
+ * 同一个节点上运行存在的同一个Index的shard数目
  */
 public class ShardsLimitAllocationDecider extends AllocationDecider {
 

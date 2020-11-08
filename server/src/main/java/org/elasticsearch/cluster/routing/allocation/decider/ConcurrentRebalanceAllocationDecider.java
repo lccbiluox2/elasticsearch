@@ -39,6 +39,8 @@ import org.elasticsearch.common.settings.Settings;
  * {@code cluster.routing.allocation.cluster_concurrent_rebalance}. Iff this
  * setting is set to {@code -1} the number of concurrent re-balance operations
  * are unlimited.
+ *
+ * rebalance 并发控制
  */
 public class ConcurrentRebalanceAllocationDecider extends AllocationDecider {
 

@@ -412,6 +412,13 @@ public class SearchTransportService {
         // this is cheap, it does not fetch during the rewrite phase, so we can let it quickly execute on a networking thread
         transportService.registerRequestHandler(QUERY_CAN_MATCH_NAME, ShardSearchTransportRequest::new, ThreadPool.Names.SAME,
             new TaskAwareTransportRequestHandler<ShardSearchTransportRequest>() {
+                /**
+                 * 收到query请求
+                 * @param request
+                 * @param channel
+                 * @param task
+                 * @throws Exception
+                 */
                 @Override
                 public void messageReceived(ShardSearchTransportRequest request, TransportChannel channel, Task task) throws Exception {
                     boolean canMatch = searchService.canMatch(request);

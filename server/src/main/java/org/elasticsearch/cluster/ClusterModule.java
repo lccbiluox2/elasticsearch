@@ -217,7 +217,21 @@ public class ClusterModule extends AbstractModule {
     }
 
     // TODO: this is public so allocation benchmark can access the default deciders...can we do that in another way?
-    /** Return a new {@link AllocationDecider} instance with builtin deciders as well as those from plugins. */
+    /** Return a new {@link AllocationDecider} instance with builtin deciders as well as those from plugins.
+     *
+     * allocators负责为某个特定的分片分配目的节点。每个allocator的主要工作是根据某种逻辑
+     * 得到一个节点列表，然后调用deciders去决策，根据决策结果选择-一个目的node。
+     *
+     * allocators分为gatewayAllocator 和shardsAllocator两种。gatewayAllocator 是为了找到现有
+     * 分片，shardsAllocator 是根据权重策略在集群的各节点间均衡分片分布。
+     *
+     * 其中gatewayAllocator又分主分片和副分片的allocator。下面概述每个allocator的作用。
+     *
+     * ●primaryShardAllocator: 找到那些拥有某分片最新数据的节点;
+     * replicaShardAllocator:找到磁盘上拥有这个分片数据的节点;
+     * BalancedShardsAllocator:找到拥有最少分片个数的节点。
+     *
+     * */
     public static Collection<AllocationDecider> createAllocationDeciders(Settings settings, ClusterSettings clusterSettings,
                                                                          List<ClusterPlugin> clusterPlugins) {
         // collect deciders by class so that we can detect duplicates

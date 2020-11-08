@@ -725,6 +725,7 @@ public class IndicesClusterStateService extends AbstractLifecycleComponent imple
         try {
             AllocatedIndex<? extends Shard> indexService = indicesService.indexService(shardRouting.shardId().getIndex());
             if (indexService != null) {
+                // 关闭Engine
                 indexService.removeShard(shardRouting.shardId().id(), message);
             }
         } catch (ShardNotFoundException e) {
@@ -739,6 +740,7 @@ public class IndicesClusterStateService extends AbstractLifecycleComponent imple
                 inner);
         }
         if (sendShardFailure) {
+            // 向master发送shard failure消息
             sendFailShard(shardRouting, message, failure, state);
         }
     }

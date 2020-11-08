@@ -76,6 +76,8 @@ import static java.util.Collections.emptyList;
  * <pre>
  * node.zone: zone1
  * </pre>
+ *
+ * 感知分配器，感知服务器，几家等，尽量分散存储shard
  */
 public class AwarenessAllocationDecider extends AllocationDecider {
 

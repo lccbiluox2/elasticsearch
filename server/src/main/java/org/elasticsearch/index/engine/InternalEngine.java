@@ -444,12 +444,25 @@ public class InternalEngine extends Engine {
         pendingTranslogRecovery.set(false); // we are good - now we can commit
     }
 
+    /**
+     * 一个Lucene索引由许多分段组成，每次搜索时遍历所有分段。内部维护了-一个称为“提交
+     * 点”的信息，其描述了当前Lucene索引都包括哪些分段，这些分段已经被fsync系统调用，从
+     * 操作系统的cache刷入磁盘。每次提交操作都会将分段刷入磁盘实现持久化。
+     * 本阶段需要重放事务日志中尚未刷入磁盘的信息，因此,根据最后一次提交的信息做快照，.
+     * 来确定事务日志中哪些数据需要重放。重放完毕后将新生成的Lucene数据刷入磁盘。
+     *
+     * @param translogRecoveryRunner
+     * @param recoverUpToSeqNo
+     * @throws IOException
+     */
     private void recoverFromTranslogInternal(TranslogRecoveryRunner translogRecoveryRunner, long recoverUpToSeqNo) throws IOException {
         Translog.TranslogGeneration translogGeneration = translog.getGeneration();
         final int opsRecovered;
+        // 根据最后一次提交的信息生成translog快照
         final long translogFileGen = Long.parseLong(lastCommittedSegmentInfos.getUserData().get(Translog.TRANSLOG_GENERATION_KEY));
         try (Translog.Snapshot snapshot = translog.newSnapshotFromGen(
             new Translog.TranslogGeneration(translog.getTranslogUUID(), translogFileGen), recoverUpToSeqNo)) {
+            // 重放这些日志
             opsRecovered = translogRecoveryRunner.run(this, snapshot);
         } catch (Exception e) {
             throw new EngineException(shardId, "failed to recover from translog", e);
@@ -458,6 +471,7 @@ public class InternalEngine extends Engine {
         // note: if opsRecovered == 0 and we have older translogs it means they are corrupted or 0 length.
         assert pendingTranslogRecovery.get() : "translogRecovery is not pending but should be";
         pendingTranslogRecovery.set(false); // we are good - now we can commit
+        // 将重放后新生成的数据刷入到硬盘
         if (opsRecovered > 0) {
             logger.trace("flushing post recovery from translog. ops recovered [{}]. committed translog id [{}]. current id [{}]",
                 opsRecovered, translogGeneration == null ? null :

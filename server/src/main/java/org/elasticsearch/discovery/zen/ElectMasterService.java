@@ -91,7 +91,9 @@ public class ElectMasterService {
         public static int compare(MasterCandidate c1, MasterCandidate c2) {
             // we explicitly swap c1 and c2 here. the code expects "better" is lower in a sorted
             // list, so if c2 has a higher cluster state version, it needs to come first.
+            // 先比较集群状态版本，注意此处c2在前 c1在后
             int ret = Long.compare(c2.clusterStateVersion, c1.clusterStateVersion);
+            // 如果版本号相同，则比较节点ID
             if (ret == 0) {
                 ret = compareNodes(c1.getNode(), c2.getNode());
             }
@@ -123,9 +125,11 @@ public class ElectMasterService {
     }
 
     public boolean hasEnoughCandidates(Collection<MasterCandidate> candidates) {
+        // 候选者为空，返回失败
         if (candidates.isEmpty()) {
             return false;
         }
+        // 默认值为-1 确保单节点的集群可以正常的选主
         if (minimumMasterNodes < 1) {
             return true;
         }
@@ -141,7 +145,9 @@ public class ElectMasterService {
     public MasterCandidate electMaster(Collection<MasterCandidate> candidates) {
         assert hasEnoughCandidates(candidates);
         List<MasterCandidate> sortedCandidates = new ArrayList<>(candidates);
+        // 通过自定义的比较函数对候选者节点从大到小排序
         sortedCandidates.sort(MasterCandidate::compare);
+        // 返回最新的作为master
         return sortedCandidates.get(0);
     }
 
@@ -212,12 +218,14 @@ public class ElectMasterService {
 
     /** master nodes go before other nodes, with a secondary sort by id **/
      private static int compareNodes(DiscoveryNode o1, DiscoveryNode o2) {
+         // 如果if处理两个节点中一个具备master 资格而另外一个不具备的情况
         if (o1.isMasterNode() && !o2.isMasterNode()) {
             return -1;
         }
         if (!o1.isMasterNode() && o2.isMasterNode()) {
             return 1;
         }
+        // 通过节点ID排序
         return o1.getId().compareTo(o2.getId());
     }
 }

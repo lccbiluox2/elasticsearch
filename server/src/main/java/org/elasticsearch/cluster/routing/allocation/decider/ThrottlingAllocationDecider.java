@@ -51,6 +51,8 @@ import static org.elasticsearch.cluster.routing.allocation.decider.Decision.YES;
  * will return {@link Decision#THROTTLE} as a hit to upstream logic to throttle
  * the allocation process to prevent overloading nodes due to too many concurrent recovery
  * processes.
+ *
+ * recovery阶段的限速配置
  */
 public class ThrottlingAllocationDecider extends AllocationDecider {
 

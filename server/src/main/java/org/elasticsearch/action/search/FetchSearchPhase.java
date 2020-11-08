@@ -161,6 +161,11 @@ final class FetchSearchPhase extends SearchPhase {
                               final Transport.Connection connection) {
         context.getSearchTransport().sendExecuteFetch(connection, fetchSearchRequest, context.getTask(),
             new SearchActionListener<FetchSearchResult>(shardTarget, shardIndex) {
+
+                /**
+                 * 处理返回成功的消息
+                 * @param result
+                 */
                 @Override
                 public void innerOnResponse(FetchSearchResult result) {
                     try {
@@ -170,6 +175,10 @@ final class FetchSearchPhase extends SearchPhase {
                     }
                 }
 
+                /**
+                 * 处理返回失败的消息
+                 * @param e
+                 */
                 @Override
                 public void onFailure(Exception e) {
                     try {
