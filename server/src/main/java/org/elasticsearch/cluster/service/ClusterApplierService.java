@@ -65,6 +65,12 @@ import java.util.stream.Stream;
 import static org.elasticsearch.cluster.service.ClusterService.CLUSTER_SERVICE_SLOW_TASK_LOGGING_THRESHOLD_SETTING;
 import static org.elasticsearch.common.util.concurrent.EsExecutors.daemonThreadFactory;
 
+/**
+ * ClusterApplierService类负责管理需要对集群任务进行处理的模块(Applier)和监听器
+ * (Listener)，以及通知各个Applier应用集群状态。其对外提供接收集群状态的接口，当传输模
+ * 块收到集群状态时，调用这个接口将集群状态传递过来，内部维护一个线程池用于应用集群状
+ * 态。
+ */
 public class ClusterApplierService extends AbstractLifecycleComponent implements ClusterApplier {
     private static final Logger logger = LogManager.getLogger(ClusterApplierService.class);
 

@@ -24,6 +24,8 @@ import org.elasticsearch.common.unit.TimeValue;
 
 /**
  * Cluster state update task configuration for timeout and priority
+ *
+ * ClusterStateTaskConfig:任务的配置信息，包括超时和优先级。
  */
 public interface ClusterStateTaskConfig {
     /**

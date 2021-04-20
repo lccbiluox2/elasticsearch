@@ -97,6 +97,18 @@ class Elasticsearch extends EnvironmentAwareCommand {
     }
 
     private static void overrideDnsCachePolicyProperties() {
+        /**
+         * networkaddress.cache.ttl
+         * #参数意义：设置jdk解析域名成功的缓存时间。
+         * 其他：设置缓存时间，单位秒
+         * 默认值：如果开启了-Djava.security.manager，默认是-1，如果未开启，默认是30s
+         *
+         * networkaddress.cache.negative.ttl=10
+         * #参数意义：设置jdk解析域名失败的缓存时间。
+         * -1：永久缓存
+         * 0：不缓存
+         * 其他：设置缓存时间，单位秒
+         */
         for (final String property : new String[] {"networkaddress.cache.ttl", "networkaddress.cache.negative.ttl" }) {
             final String overrideProperty = "es." + property;
             final String overrideValue = System.getProperty(overrideProperty);

@@ -187,8 +187,10 @@ public class PublishClusterStateAction {
         final ClusterState previousState = clusterChangedEvent.previousState();
         final TimeValue publishTimeout = discoverySettings.getPublishTimeout();
 
+        // 计时器开始
         final long publishingStartInNanos = System.nanoTime();
 
+        // 遍历节点，异步发送全量或者增量内容，这是二阶段提交的第一个请求
         for (final DiscoveryNode node : nodesToPublishTo) {
             // try and serialize the cluster state once (or per version), so we don't serialize it
             // per node when we send it over the wire, compress it while we are at it...
@@ -200,15 +202,19 @@ public class PublishClusterStateAction {
             }
         }
 
+        // 等待第一个请求收到的响应足够，或者达到commit_ timeout 超时时间，如果超
+        // 时后仍未收到足够数量的响应，则抛出异常，结束发布过程
         sendingController.waitForCommit(discoverySettings.getCommitTimeout());
 
         final long commitTime = System.nanoTime() - publishingStartInNanos;
 
         ackListener.onCommit(TimeValue.timeValueNanos(commitTime));
 
+        // 第一阶段已经正常完成，等待第二个请求，也就是提交请求完成
         try {
             long timeLeftInNanos = Math.max(0, publishTimeout.nanos() - commitTime);
             final BlockingClusterStatePublishResponseHandler publishResponseHandler = sendingController.getPublishResponseHandler();
+            // 等待提交请求收到足够的回复，或者达到了publish_timeout超时
             sendingController.setPublishingTimedOut(!publishResponseHandler.awaitAllNodes(TimeValue.timeValueNanos(timeLeftInNanos)));
             if (sendingController.getPublishingTimedOut()) {
                 DiscoveryNode[] pendingNodes = publishResponseHandler.pendingNodes();

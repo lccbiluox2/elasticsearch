@@ -22,6 +22,10 @@ import org.elasticsearch.cluster.service.MasterService;
 
 import java.util.List;
 
+/**
+ * ClusterStateTaskListener:提交任务时实现一些回调函数，例如，对任务处理失败、
+ * 集群状态处理完毕时的处理。
+ */
 public interface ClusterStateTaskListener {
 
     /**

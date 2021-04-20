@@ -24,6 +24,12 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ClusterStateTaskExecutor:主要是定义要执行的任务。每个任务在执行时会传入当前
+ * 集群状态，任务执行完毕返回新产生的集群状态。如果没有产生新的集群状态，则返
+ * 回原集群状态的实例。
+ * @param <T>
+ */
 public interface ClusterStateTaskExecutor<T> {
     /**
      * Update the cluster state based on the current state and the given tasks. Return the *same instance* if no state

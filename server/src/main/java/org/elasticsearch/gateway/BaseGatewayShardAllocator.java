@@ -54,6 +54,7 @@ public abstract class BaseGatewayShardAllocator {
     public void allocateUnassigned(RoutingAllocation allocation) {
         final RoutingNodes routingNodes = allocation.routingNodes();
         final RoutingNodes.UnassignedShards.UnassignedIterator unassignedIterator = routingNodes.unassigned().iterator();
+        // 遍历未分配的分片
         while (unassignedIterator.hasNext()) {
             final ShardRouting shard = unassignedIterator.next();
             final AllocateUnassignedDecision allocateUnassignedDecision = makeAllocationDecision(shard, allocation, logger);

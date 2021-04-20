@@ -425,14 +425,18 @@ public class RoutingNodes implements Iterable<RoutingNode> {
                                         long expectedSize, RoutingChangesObserver routingChangesObserver) {
         ensureMutable();
         assert unassignedShard.unassigned() : "expected an unassigned shard " + unassignedShard;
+        // 初始化一个ShardRouting
         ShardRouting initializedShard = unassignedShard.initialize(nodeId, existingAllocationId, expectedSize);
+        // 添加到目的节点的shard列表
         node(nodeId).add(initializedShard);
         inactiveShardCount++;
         if (initializedShard.primary()) {
             inactivePrimaryCount++;
         }
         addRecovery(initializedShard);
+        // 添加到assingned shards 列表
         assignedShardsAdd(initializedShard);
+        // 设置状态已经更新
         routingChangesObserver.shardInitialized(unassignedShard, initializedShard);
         return initializedShard;
     }

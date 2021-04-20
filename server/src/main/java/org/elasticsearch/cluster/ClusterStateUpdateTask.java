@@ -56,11 +56,15 @@ public abstract class ClusterStateUpdateTask
     /**
      * Update the cluster state based on the current state. Return the *same instance* if no state
      * should be changed.
+     *
+     * 实现要执行的具体任务，任务返回新的集群信息
      */
     public abstract ClusterState execute(ClusterState currentState) throws Exception;
 
     /**
      * A callback called when execute fails.
+     *
+     * 任务执行失败的回调
      */
     public abstract void onFailure(String source, Exception e);
 

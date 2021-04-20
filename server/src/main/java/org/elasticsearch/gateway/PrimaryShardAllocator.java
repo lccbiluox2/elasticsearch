@@ -73,6 +73,22 @@ public abstract class PrimaryShardAllocator extends BaseGatewayShardAllocator {
                     || shard.recoverySource().getType() == RecoverySource.Type.SNAPSHOT);
     }
 
+    /**
+     * 主分片分配器的makeAllocationDecision过程返回指定的分片是否可以被分配，如果还没有
+     * 这个分片的信息,则向集群的其他节点去请求该信息;如果已经有了,则根据decider进行决策。
+     *
+     * 首次进入函数时，还没有任何分片的元信息，发起向集群所有数据节点获取某个shard 元
+     * 信息的fetchData请求。
+     * 之所以把请求发到所有节点，是因为它不知道哪个节点有这个shard 的数据。集群启动的
+     * 时候，遍历所有shard,再对每个shard向所有数据节点发fetchData请求。如果集群有100 个节
+     * 点、1000个分片，则总计需要请求100X 1000= 100000次。虽然是异步的，但仍然存在效率问
+     * 题。当ES集群规模比较大、分片数非常多的时候，这个请求的总量就会很大。
+     *
+     * @param unassignedShard  the unassigned shard to allocate
+     * @param allocation       the current routing state
+     * @param logger           the logger
+     * @return
+     */
     @Override
     public AllocateUnassignedDecision makeAllocationDecision(final ShardRouting unassignedShard,
                                                              final RoutingAllocation allocation,
