@@ -99,6 +99,7 @@ final class Bootstrap {
         final Logger logger = LogManager.getLogger(Bootstrap.class);
 
         // check if the user is running as root, and bail
+        // 检查是不是root用户启动
         if (Natives.definitelyRunningAsRoot()) {
             throw new RuntimeException("can not run elasticsearch as root");
         }
@@ -209,6 +210,7 @@ final class Bootstrap {
             throw new BootstrapException(e);
         }
 
+        /** 创建节点 */
         node = new Node(environment) {
             @Override
             protected void validateNodeBeforeAcceptingRequests(
@@ -290,9 +292,12 @@ final class Bootstrap {
         // the security manager is installed
         BootstrapInfo.init();
 
+        /** 创建Bootstrap */
         INSTANCE = new Bootstrap();
 
+        // 加载安全设置
         final SecureSettings keystore = loadSecureSettings(initialEnv);
+        // 创建运行环境
         final Environment environment = createEnvironment(foreground, pidFile, keystore, initialEnv.settings(), initialEnv.configFile());
 
         if (Node.NODE_NAME_SETTING.exists(environment.settings())) {
@@ -303,6 +308,8 @@ final class Bootstrap {
         } catch (IOException e) {
             throw new BootstrapException(e);
         }
+
+        // 创建pid file
         if (environment.pidFile() != null) {
             try {
                 PidFile.create(environment.pidFile(), true);
@@ -323,17 +330,23 @@ final class Bootstrap {
             }
 
             // fail if somebody replaced the lucene jars
+            // 如果有人替换了lucene jar就会失败
             checkLucene();
 
             // install the default uncaught exception handler; must be done before security is
             // initialized as we do not want to grant the runtime permission
             // setDefaultUncaughtExceptionHandler
+            //
+            // 安装默认的未捕获异常处理程序;必须在安全初始化之前完成，因为我们不想授予运行时
+            // 权限setDefaultUncaughtExceptionHandler
             Thread.setDefaultUncaughtExceptionHandler(new ElasticsearchUncaughtExceptionHandler());
 
+            /** bootstrap 启动*/
             INSTANCE.setup(true, environment);
 
             try {
                 // any secure settings must be read during node construction
+                // 任何安全设置都必须在节点构建过程中读取
                 IOUtils.close(keystore);
             } catch (IOException e) {
                 throw new BootstrapException(e);

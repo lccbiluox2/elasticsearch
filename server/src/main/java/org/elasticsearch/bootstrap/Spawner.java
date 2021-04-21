@@ -55,6 +55,8 @@ final class Spawner implements Closeable {
     /**
      * Spawns the native controllers for each module.
      *
+     * 为每个模块生成本地控制器。
+     *
      * @param environment the node environment
      * @throws IOException if an I/O error occurs reading the module or spawning a native process
      */

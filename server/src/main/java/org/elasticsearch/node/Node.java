@@ -288,11 +288,14 @@ public abstract class Node implements Closeable {
              * recover the node id which we might have to use to derive the
              * node name. And it is important to get *that* as soon as possible
              * so that log lines can contain it.
+             *
+             * 尽快创建节点环境，以便恢复可能必须使用的节点id来派生节点名。尽快获取*that*是很重要的，这样日志行才能包含它。
              */
             boolean nodeNameExplicitlyDefined = NODE_NAME_SETTING.exists(tmpSettings);
             try {
                 Consumer<String> nodeIdConsumer = nodeNameExplicitlyDefined ?
                         nodeId -> {} : nodeId -> registerDerivedNodeNameWithLogger(nodeIdToNodeName(nodeId));
+                /** 创建node运行环境 */
                 nodeEnvironment = new NodeEnvironment(tmpSettings, environment, nodeIdConsumer);
                 resourcesToClose.add(nodeEnvironment);
             } catch (IOException ex) {
@@ -335,6 +338,7 @@ public abstract class Node implements Closeable {
                     environment.configFile(), Arrays.toString(environment.dataFiles()), environment.logsFile(), environment.pluginsFile());
             }
 
+            // 插件service
             this.pluginsService = new PluginsService(tmpSettings, environment.configFile(), environment.modulesFile(),
                 environment.pluginsFile(), classpathPlugins);
             this.settings = pluginsService.updatedSettings();
@@ -342,14 +346,17 @@ public abstract class Node implements Closeable {
 
             // create the environment based on the finalized (processed) view of the settings
             // this is just to makes sure that people get the same settings, no matter where they ask them from
+            // 这只是为了确保人们得到相同的设置，无论他们从哪里询问他们
             this.environment = new Environment(this.settings, environment.configFile());
             Environment.assertEquivalent(environment, this.environment);
 
             final List<ExecutorBuilder<?>> executorBuilders = pluginsService.getExecutorBuilders(settings);
 
+            // 创建线程池
             final ThreadPool threadPool = new ThreadPool(settings, executorBuilders.toArray(new ExecutorBuilder[0]));
             resourcesToClose.add(() -> ThreadPool.terminate(threadPool, 10, TimeUnit.SECONDS));
             // adds the context to the DeprecationLogger so that it does not need to be injected everywhere
+            // 向DeprecationLogger添加上下文，这样它就不需要到处注入
             DeprecationLogger.setThreadContext(threadPool.getThreadContext());
             resourcesToClose.add(() -> DeprecationLogger.removeThreadContext(threadPool.getThreadContext()));
 
@@ -358,6 +365,8 @@ public abstract class Node implements Closeable {
             for (final ExecutorBuilder<?> builder : threadPool.builders()) {
                 additionalSettings.addAll(builder.getRegisteredSettings());
             }
+
+            /** 创建node client **/
             client = new NodeClient(settings, threadPool);
             final ResourceWatcherService resourceWatcherService = new ResourceWatcherService(settings, threadPool);
             final ScriptModule scriptModule = new ScriptModule(settings, pluginsService.filterPlugins(ScriptPlugin.class));
@@ -375,18 +384,28 @@ public abstract class Node implements Closeable {
                     new SettingsModule(this.settings, additionalSettings, additionalSettingsFilter, settingsUpgraders);
             scriptModule.registerClusterSettingsListeners(settingsModule.getClusterSettings());
             resourcesToClose.add(resourceWatcherService);
+
+            /** 创建network service */
             final NetworkService networkService = new NetworkService(
                 getCustomNameResolvers(pluginsService.filterPlugins(DiscoveryPlugin.class)));
 
             List<ClusterPlugin> clusterPlugins = pluginsService.filterPlugins(ClusterPlugin.class);
+
+            /** 创建 ClusterService service */
             final ClusterService clusterService = new ClusterService(settings, settingsModule.getClusterSettings(), threadPool,
                ClusterModule.getClusterStateCustomSuppliers(clusterPlugins));
             clusterService.addStateApplier(scriptModule.getScriptService());
             resourcesToClose.add(clusterService);
+
+            /** 创建 IngestService service */
             final IngestService ingestService = new IngestService(clusterService, threadPool, this.environment,
                 scriptModule.getScriptService(), analysisModule.getAnalysisRegistry(), pluginsService.filterPlugins(IngestPlugin.class));
+
+            /** 创建 磁盘阈值监控 */
             final DiskThresholdMonitor listener = new DiskThresholdMonitor(settings, clusterService::state,
                 clusterService.getClusterSettings(), client);
+
+            /** 创建 ClusterInfoService */
             final ClusterInfoService clusterInfoService = newClusterInfoService(settings, clusterService, threadPool, client,
                 listener::onNewInfo);
             final UsageService usageService = new UsageService();
@@ -396,6 +415,8 @@ public abstract class Node implements Closeable {
             for (Module pluginModule : pluginsService.createGuiceModules()) {
                 modules.add(pluginModule);
             }
+
+            /** 创建 MonitorService */
             final MonitorService monitorService = new MonitorService(settings, nodeEnvironment, threadPool, clusterInfoService);
             ClusterModule clusterModule = new ClusterModule(settings, clusterService, clusterPlugins, clusterInfoService);
             modules.add(clusterModule);
