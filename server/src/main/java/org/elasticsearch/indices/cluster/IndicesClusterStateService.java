@@ -245,6 +245,7 @@ public class IndicesClusterStateService extends AbstractLifecycleComponent imple
 
         createIndices(state);
 
+        //恢复模块  node启动后会获取集群元信息 从集群元信息中可以获取到 当前的集群状态 路由表 索引 等等信息
         createOrUpdateShards(state);
     }
 
@@ -565,6 +566,7 @@ public class IndicesClusterStateService extends AbstractLifecycleComponent imple
                 Shard shard = indexService.getShardOrNull(shardId.id());
                 if (shard == null) {
                     assert shardRouting.initializing() : shardRouting + " should have been removed by failMissingShards";
+                    //新加入的节点需要创建新的shard
                     createShard(nodes, routingTable, shardRouting, state);
                 } else {
                     updateShard(nodes, shardRouting, shard, routingTable, state);
@@ -588,7 +590,9 @@ public class IndicesClusterStateService extends AbstractLifecycleComponent imple
         try {
             final long primaryTerm = state.metadata().index(shardRouting.index()).primaryTerm(shardRouting.id());
             logger.debug("{} creating shard with primary term [{}]", shardRouting.shardId(), primaryTerm);
+            //设置恢复阶段为INIT 此时还未恢复
             RecoveryState recoveryState = new RecoveryState(shardRouting, nodes.getLocalNode(), sourceNode);
+            //创建分片
             indicesService.createShard(
                     shardRouting,
                     recoveryState,
@@ -885,6 +889,8 @@ public class IndicesClusterStateService extends AbstractLifecycleComponent imple
 
         /**
          * Creates a shard for the specified shard routing and starts recovery.
+         *
+         * shard的create 和 recovery 放在一起了
          *
          * @param shardRouting           the shard routing
          * @param recoveryState          the recovery state

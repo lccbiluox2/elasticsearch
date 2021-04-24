@@ -303,6 +303,13 @@ public class OperationRouting {
         return calculateScaledShardId(indexMetadata, effectiveRouting, partitionOffset);
     }
 
+    /**
+     * 计算往哪个分片上发的算法
+     * @param indexMetadata
+     * @param effectiveRouting
+     * @param partitionOffset
+     * @return
+     */
     private static int calculateScaledShardId(IndexMetadata indexMetadata, String effectiveRouting, int partitionOffset) {
         final int hash = Murmur3HashFunction.hash(effectiveRouting) + partitionOffset;
 

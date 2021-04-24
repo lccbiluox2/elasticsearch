@@ -355,6 +355,7 @@ public class SearchService extends AbstractLifecycleComponent implements IndexEv
     private void loadOrExecuteQueryPhase(final ShardSearchRequest request, final SearchContext context) throws Exception {
         final boolean canCache = indicesService.canCache(request, context);
         context.getQueryShardContext().freezeContext();
+        //如果可以缓存  从缓存中着  没有的话 先查后写
         if (canCache) {
             indicesService.loadIntoContext(request, context, queryPhase);
         } else {

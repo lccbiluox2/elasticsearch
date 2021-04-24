@@ -396,6 +396,7 @@ public class IndexService extends AbstractIndexComponent implements IndicesClust
             throw new IllegalStateException("Can't create shard " + routing.shardId() + ", closed");
         }
         final Settings indexSettings = this.indexSettings.getSettings();
+        //获取需要恢复的shardId
         final ShardId shardId = routing.shardId();
         boolean success = false;
         Store store = null;
@@ -403,14 +404,17 @@ public class IndexService extends AbstractIndexComponent implements IndicesClust
         ShardLock lock = null;
         try {
             lock = nodeEnv.shardLock(shardId, "shard creation", TimeUnit.SECONDS.toMillis(5));
+            //分片创建前 会把该有的服务先注册进去
             eventListener.beforeIndexShardCreated(shardId, indexSettings);
             ShardPath path;
             try {
+                //如果已经存在shard路径
                 path = ShardPath.loadShardPath(logger, nodeEnv, shardId, this.indexSettings.customDataPath());
             } catch (IllegalStateException ex) {
                 logger.warn("{} failed to load shard path, trying to remove leftover", shardId);
                 try {
                     ShardPath.deleteLeftoverShardDirectory(logger, nodeEnv, lock, this.indexSettings);
+                    //计算主分片的位置 和分片ID
                     path = ShardPath.loadShardPath(logger, nodeEnv, shardId, this.indexSettings.customDataPath());
                 } catch (Exception inner) {
                     ex.addSuppressed(inner);
@@ -476,8 +480,10 @@ public class IndexService extends AbstractIndexComponent implements IndicesClust
                     () -> globalCheckpointSyncer.accept(shardId),
                     retentionLeaseSyncer,
                     circuitBreakerService);
+            //更新shard信息 因为state文件夹已经创建
             eventListener.indexShardStateChanged(indexShard, null, indexShard.state(), "shard created");
             eventListener.afterIndexShardCreated(indexShard);
+            //把shard放进shard 集合中 通过shards.get()可以获取已存在的shard
             shards = newMapBuilder(shards).put(shardId.id(), indexShard).immutableMap();
             success = true;
             return indexShard;

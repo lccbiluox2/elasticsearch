@@ -323,6 +323,8 @@ public class IndexNameExpressionResolver {
     /**
      * Utility method that allows to resolve an index expression to its corresponding single write index.
      *
+     * 实用程序方法，允许将索引表达式解析为其对应的单写索引。
+     *
      * @param state             the cluster state containing all the data to resolve to expression to a concrete index
      * @param request           The request that defines how the an alias or an index need to be resolved to a concrete index
      *                          and the expression that can be resolved to an alias or an index name.
@@ -339,6 +341,8 @@ public class IndexNameExpressionResolver {
 
     /**
      * Utility method that allows to resolve an index expression to its corresponding single write index.
+     *
+     * 实用程序方法，允许将索引表达式解析为其对应的单写索引。
      *
      * @param state             the cluster state containing all the data to resolve to expression to a concrete index
      * @param options           defines how the aliases or indices need to be resolved to concrete indices

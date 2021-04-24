@@ -53,10 +53,13 @@ public class Gateway {
     }
 
     public void performStateRecovery(final GatewayStateRecoveredListener listener) throws GatewayException {
+        //获取master节点Id集合
         final String[] nodesIds = clusterService.state().nodes().getMasterNodes().keys().toArray(String.class);
         logger.trace("performing state recovery from {}", Arrays.toString(nodesIds));
+        //获取元信息  向master发送获取元信息请求 本过程将阻塞
         final TransportNodesListGatewayMetaState.NodesGatewayMetaState nodesState = listGatewayMetaState.list(nodesIds, null).actionGet();
 
+        //discovery.zen.minimum_master_nodes  控制
         final int requiredAllocation = Math.max(1, minimumMasterNodes);
 
         if (nodesState.hasFailures()) {
@@ -68,6 +71,7 @@ public class Gateway {
         final ObjectFloatHashMap<Index> indices = new ObjectFloatHashMap<>();
         Metadata electedGlobalState = null;
         int found = 0;
+        //集群级的元数据
         for (final TransportNodesListGatewayMetaState.NodeGatewayMetaState nodeState : nodesState.getNodes()) {
             if (nodeState.metadata() == null) {
                 continue;
@@ -76,6 +80,7 @@ public class Gateway {
             if (electedGlobalState == null) {
                 electedGlobalState = nodeState.metadata();
             } else if (nodeState.metadata().version() > electedGlobalState.version()) {
+                //只取最新版本的元信息  选择集群元信息中版本最高的
                 electedGlobalState = nodeState.metadata();
             }
             for (final ObjectCursor<IndexMetadata> cursor : nodeState.metadata().indices().values()) {
@@ -91,6 +96,7 @@ public class Gateway {
 
         assert !indices.containsKey(null);
         final Object[] keys = indices.keys;
+        //索引级元信息
         for (int i = 0; i < keys.length; i++) {
             if (keys[i] != null) {
                 final Index index = (Index) keys[i];
@@ -107,12 +113,14 @@ public class Gateway {
                     if (electedIndexMetadata == null) {
                         electedIndexMetadata = indexMetadata;
                     } else if (indexMetadata.getVersion() > electedIndexMetadata.getVersion()) {
+                        //选取版本最高的索引级元数据
                         electedIndexMetadata = indexMetadata;
                     }
                     indexMetadataCount++;
                 }
                 if (electedIndexMetadata != null) {
                     if (indexMetadataCount < requiredAllocation) {
+                        //如果小于 discovery.zen.minimum_master_nodes
                         logger.debug("[{}] found [{}], required [{}], not adding", index, indexMetadataCount, requiredAllocation);
                     } // TODO if this logging statement is correct then we are missing an else here
 

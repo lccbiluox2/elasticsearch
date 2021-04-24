@@ -67,6 +67,7 @@ public class RestGetAction extends BaseRestHandler {
     @Override
     public RestChannelConsumer prepareRequest(final RestRequest request, final NodeClient client) throws IOException {
         GetRequest getRequest;
+        // 如果包含 type  那么打印type已经失效了
         if (request.hasParam("type")) {
             deprecationLogger.deprecatedAndMaybeLog("get_with_types", TYPES_DEPRECATION_MESSAGE);
             getRequest = new GetRequest(request.param("index"), request.param("type"), request.param("id"));
@@ -77,6 +78,7 @@ public class RestGetAction extends BaseRestHandler {
         getRequest.refresh(request.paramAsBoolean("refresh", getRequest.refresh()));
         getRequest.routing(request.param("routing"));
         getRequest.preference(request.param("preference"));
+        //默认为true 需要刷盘
         getRequest.realtime(request.paramAsBoolean("realtime", getRequest.realtime()));
         if (request.param("fields") != null) {
             throw new IllegalArgumentException("the parameter [fields] is no longer supported, " +

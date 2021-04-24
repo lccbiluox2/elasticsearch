@@ -95,6 +95,7 @@ public class ReplicationOperation<
     }
 
     public void execute() throws Exception {
+        //检查是否够活跃的分片
         final String activeShardCountFailure = checkActiveShardCount();
         final ShardRouting primaryRouting = primary.routingEntry();
         final ShardId primaryId = primaryRouting.shardId();
@@ -106,6 +107,7 @@ public class ReplicationOperation<
 
         totalShards.incrementAndGet();
         pendingActions.incrementAndGet(); // increase by 1 until we finish all primary coordination
+        //在主分片上写
         primary.perform(request, ActionListener.wrap(this::handlePrimaryResult, resultListener::onFailure));
     }
 
@@ -123,6 +125,8 @@ public class ReplicationOperation<
             // is valid for this replication group. If we would sample in the reverse, the global checkpoint might be based on a subset
             // of the sampled replication group, and advanced further than what the given replication group would allow it to.
             // This would entail that some shards could learn about a global checkpoint that would be higher than its local checkpoint.
+
+            //获取全局检查点  checkPoint
             final long globalCheckpoint = primary.computedGlobalCheckpoint();
             // we have to capture the max_seq_no_of_updates after this request was completed on the primary to make sure the value of
             // max_seq_no_of_updates on replica when this request is executed is at least the value on the primary when it was executed
@@ -224,6 +228,7 @@ public class ReplicationOperation<
 
     private void updateCheckPoints(ShardRouting shard, LongSupplier localCheckpointSupplier, LongSupplier globalCheckpointSupplier) {
         try {
+            //更新本地checkPoint  每个分片都维护一个本地的checkpoint 主分片上还会维护一个全局的
             primary.updateLocalCheckpointForShard(shard.allocationId().getId(), localCheckpointSupplier.getAsLong());
             primary.updateGlobalCheckpointForShard(shard.allocationId().getId(), globalCheckpointSupplier.getAsLong());
         } catch (final AlreadyClosedException e) {
@@ -281,6 +286,9 @@ public class ReplicationOperation<
         }
     }
 
+    /**
+     * 每次提交都会在pendingAction列表理添加 当待执行的列表为空的话 执行结束
+     */
     private void decPendingAndFinishIfNeeded() {
         assert pendingActions.get() > 0 : "pending action count goes below 0 for request [" + request + "]";
         if (pendingActions.decrementAndGet() == 0) {

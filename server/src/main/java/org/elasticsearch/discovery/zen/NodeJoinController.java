@@ -146,6 +146,8 @@ public class NodeJoinController {
     /**
      * Accumulates any future incoming join request. Pending join requests will be processed in the final steps of becoming a
      * master or when {@link #stopElectionContext(String)} is called.
+     *
+     * 累积未来任何传入的连接请求。挂起的连接请求将在成为master的最后步骤中处理，或者在调用{@link #stopElectionContext(String)}时处理。
      */
     public synchronized void startElectionContext() {
         logger.trace("starting an election context, will accumulate joins");

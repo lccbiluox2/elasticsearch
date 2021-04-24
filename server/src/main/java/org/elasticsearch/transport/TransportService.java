@@ -780,6 +780,13 @@ public class TransportService extends AbstractLifecycleComponent implements Repo
         }
     }
 
+    /**
+     * 如果是在本地会发送一个message过去
+     * @param requestId
+     * @param action
+     * @param request
+     * @param options
+     */
     private void sendLocalRequest(long requestId, final String action, final TransportRequest request, TransportRequestOptions options) {
         final DirectResponseChannel channel = new DirectResponseChannel(localNode, action, requestId, this, threadPool);
         try {

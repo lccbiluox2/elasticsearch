@@ -372,11 +372,13 @@ final class StoreRecovery {
         indexShard.preRecovery();
         final RecoveryState recoveryState = indexShard.recoveryState();
         final boolean indexShouldExists = recoveryState.getRecoverySource().getType() != RecoverySource.Type.EMPTY_STORE;
+        //设置为index 阶段
         indexShard.prepareForIndexRecovery();
         SegmentInfos si = null;
         final Store store = indexShard.store();
         store.incRef();
         try {
+            //获取本地需要恢复节点的版本号 通过最后提交的segment中获取 lucene 提交一次就是一个segment
             try {
                 store.failIfCorrupted();
                 try {
@@ -404,6 +406,8 @@ final class StoreRecovery {
             } catch (Exception e) {
                 throw new IndexShardRecoveryException(shardId, "failed to fetch index version after copying it over", e);
             }
+
+            //如果恢复的数据源在本地
             if (recoveryState.getRecoverySource().getType() == RecoverySource.Type.LOCAL_SHARDS) {
                 assert indexShouldExists;
                 bootstrap(indexShard, store);
@@ -417,6 +421,7 @@ final class StoreRecovery {
                 try {
                     final RecoveryState.Index index = recoveryState.getIndex();
                     if (si != null) {
+                        //把需要获取的文件名称 长度等放到集合中
                         addRecoveredFileDetails(si, store, index);
                     }
                 } catch (IOException e) {
@@ -432,7 +437,9 @@ final class StoreRecovery {
             }
             indexShard.openEngineAndRecoverFromTranslog();
             indexShard.getEngine().fillSeqNoGaps(indexShard.getPendingPrimaryTerm());
+            //设置当前的状态为finalizeRecovery 然后把数据写到cache里面  此时translog可以被删除了 设置setEnableGcDeletes(true)
             indexShard.finalizeRecovery();
+            //更新集群信息 恢复已经完成 同时设置当前阶段为DONE
             indexShard.postRecovery("post recovery from shard_store");
         } catch (EngineException | IOException e) {
             throw new IndexShardRecoveryException(shardId, "failed to recover from gateway", e);

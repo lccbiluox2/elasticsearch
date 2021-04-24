@@ -93,7 +93,9 @@ public class ClusterStateObserver {
         this.contextHolder = contextHolder;
     }
 
-    /** sets the last observed state to the currently applied cluster state and returns it */
+    /** sets the last observed state to the currently applied cluster state and returns it
+     * 将最后一个观察状态设置为当前应用的集群状态并返回它
+     * */
     public ClusterState setAndGetObservedState() {
         if (observingContext.get() != null) {
             throw new ElasticsearchException("cannot set current cluster state while waiting for a cluster state change");

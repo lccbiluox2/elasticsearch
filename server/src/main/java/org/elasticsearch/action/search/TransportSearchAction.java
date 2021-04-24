@@ -473,6 +473,7 @@ public class TransportSearchAction extends HandledTransportAction<SearchRequest,
         // of just for the _search api
         final Index[] indices = resolveLocalIndices(localIndices, searchRequest.indicesOptions(), clusterState, timeProvider);
         Map<String, AliasFilter> aliasFilter = buildPerIndexAliasFilter(searchRequest, clusterState, indices, remoteAliasMap);
+        //如果没有设置routing信息 routingmap为空
         Map<String, Set<String>> routingMap = indexNameExpressionResolver.resolveSearchRouting(clusterState, searchRequest.routing(),
             searchRequest.indices());
         routingMap = routingMap == null ? Collections.emptyMap() : Collections.unmodifiableMap(routingMap);
@@ -483,14 +484,18 @@ public class TransportSearchAction extends HandledTransportAction<SearchRequest,
         Map<String, Long> nodeSearchCounts = searchTransportService.getPendingSearchRequests();
         GroupShardsIterator<ShardIterator> localShardsIterator = clusterService.operationRouting().searchShards(clusterState,
                 concreteIndices, routingMap, searchRequest.preference(), searchService.getResponseCollectorService(), nodeSearchCounts);
+        //索引所在的三个分片
         GroupShardsIterator<SearchShardIterator> shardIterators = mergeShardsIterators(localShardsIterator, localIndices,
             searchRequest.getLocalClusterAlias(), remoteShardIterators);
 
+        //如果超出规定的分片数 默认是long.maxvalue
         failIfOverShardCountLimit(clusterService, shardIterators.size());
 
+        //查询权重
         Map<String, Float> concreteIndexBoosts = resolveIndexBoosts(searchRequest, clusterState);
 
         // optimize search type for cases where there is only one shard group to search on
+        //如果只有一个分片的话 也就不存在需要到各个分片查完然后打分汇总了 直接用这个查出来的就是排序之后的结果了
         if (shardIterators.size() == 1) {
             // if we only have one group, then we always want Q_T_F, no need for DFS, and no need to do THEN since we hit one shard
             searchRequest.searchType(QUERY_THEN_FETCH);
@@ -499,6 +504,7 @@ public class TransportSearchAction extends HandledTransportAction<SearchRequest,
            // No user preference defined in search request - apply cluster service default
             searchRequest.allowPartialSearchResults(searchService.defaultAllowPartialSearchResults());
         }
+        //如果只用做suggest  不需要全局排序
         if (searchRequest.isSuggestOnly()) {
             // disable request cache if we have only suggest
             searchRequest.requestCache(false);
@@ -511,6 +517,7 @@ public class TransportSearchAction extends HandledTransportAction<SearchRequest,
         }
 
         final DiscoveryNodes nodes = clusterState.nodes();
+        //构建了connection的集合
         BiFunction<String, String, Transport.Connection> connectionLookup = buildConnectionLookup(searchRequest.getLocalClusterAlias(),
             nodes::get, remoteConnections, searchTransportService::getConnection);
         boolean preFilterSearchShards = shouldPreFilterSearchShards(clusterState, searchRequest, indices, shardIterators.size());

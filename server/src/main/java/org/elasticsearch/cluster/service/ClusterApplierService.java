@@ -455,9 +455,17 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
         }
     }
 
+    /**
+     * 当节点启动或者集群启动时发现节点信息发生变化
+     * @param task
+     * @param previousClusterState
+     * @param newClusterState
+     * @param stopWatch
+     */
     private void applyChanges(UpdateTask task, ClusterState previousClusterState, ClusterState newClusterState, StopWatch stopWatch) {
         ClusterChangedEvent clusterChangedEvent = new ClusterChangedEvent(task.source, newClusterState, previousClusterState);
         // new cluster state, notify all listeners
+        //新集群信息的node信息
         final DiscoveryNodes.Delta nodesDelta = clusterChangedEvent.nodesDelta();
         if (nodesDelta.hasChanges() && logger.isInfoEnabled()) {
             String summary = nodesDelta.shortSummary();
@@ -477,11 +485,13 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
             logger.debug("applying settings from cluster state with version {}", newClusterState.version());
             final Settings incomingSettings = clusterChangedEvent.state().metadata().settings();
             try (Releasable ignored = stopWatch.timing("applying settings")) {
+                //如果集群信息已经发生变化 更新集群信息
                 clusterSettings.applySettings(incomingSettings);
             }
         }
 
         logger.debug("apply cluster state with version {}", newClusterState.version());
+        //通知所有的applier
         callClusterStateAppliers(clusterChangedEvent, stopWatch);
 
         nodeConnectionsService.disconnectFromNodesExcept(newClusterState.nodes());
@@ -493,8 +503,10 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
             + " on " + newClusterState.nodes().getLocalNode();
 
         logger.debug("set locally applied cluster state to version {}", newClusterState.version());
+        //更新集群状态
         state.set(newClusterState);
 
+        //通知所有的listener
         callClusterStateListeners(clusterChangedEvent, stopWatch);
     }
 

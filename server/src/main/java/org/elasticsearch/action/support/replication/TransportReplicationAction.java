@@ -315,6 +315,7 @@ public abstract class TransportReplicationAction<
                     throw blockException;
                 }
 
+                //如果主分片已经迁移 往迁移的分片上发
                 if (primaryShardReference.isRelocated()) {
                     primaryShardReference.close(); // release shard operation lock as soon as possible
                     setPhase(replicationTask, "primary_delegation");

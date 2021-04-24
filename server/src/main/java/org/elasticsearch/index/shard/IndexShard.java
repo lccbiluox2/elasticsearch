@@ -1425,6 +1425,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
         }
         try {
             maybeCheckIndex(); // check index here and won't do it again if ops-based recovery occurs
+            //检查完成之后 开始进入translog阶段  设置阶段translog
             recoveryState.setStage(RecoveryState.Stage.TRANSLOG);
             if (safeCommit.isPresent() == false) {
                 logger.trace("skip local recovery as no safe commit found");
@@ -1540,11 +1541,14 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
     /**
      * Replays translog operations from the provided translog {@code snapshot} to the current engine using the given {@code origin}.
      * The callback {@code onOperationRecovered} is notified after each translog operation is replayed successfully.
+     *
+     * 读快照 并做相应的索引操作
      */
     int runTranslogRecovery(Engine engine, Translog.Snapshot snapshot, Engine.Operation.Origin origin,
                             Runnable onOperationRecovered) throws IOException {
         int opsRecovered = 0;
         Translog.Operation operation;
+        //如果快照中有数据
         while ((operation = snapshot.next()) != null) {
             try {
                 logger.trace("[translog] recover op {}", operation);
@@ -1625,6 +1629,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
 
         // we disable deletes since we allow for operations to be executed against the shard while recovering
         // but we need to make sure we don't loose deletes until we are done recovering
+        //恢复阶段 不允许translog被删除 因为恢复过程会使用translog 如果删除了就恢复不了了
         config.setEnableGcDeletes(false);
         updateRetentionLeasesOnReplica(loadRetentionLeases());
         assert recoveryState.getRecoverySource().expectEmptyRetentionLeases() == false || getRetentionLeases().leases().isEmpty()
@@ -2462,7 +2467,9 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
     }
 
     public void maybeCheckIndex() {
+        //找到最后一次lucene提价的信息后 进入索引的检验  verify_index 阶段
         recoveryState.setStage(RecoveryState.Stage.VERIFY_INDEX);
+        //执行索引检查  可以在配置文件中设置  默认为false
         if (Booleans.isTrue(checkIndexOnStartup) || "checksum".equals(checkIndexOnStartup)) {
             try {
                 checkIndex();
@@ -2569,13 +2576,16 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
         //           }
         //     }}
         // }
+        //恢复的类型 在allcoation分片的时候设置 大致时先读集群元信息，如果有的话 主分片设置为EXISTING_STORE 副本分片设置为PEER，如果没有的话 先分片 在分片过程中设置
         assert recoveryState.getRecoverySource().equals(shardRouting.recoverySource());
         switch (recoveryState.getRecoverySource().getType()) {
             case EMPTY_STORE:
+                //主分片从本地恢复
             case EXISTING_STORE:
                 executeRecovery("from store", recoveryState, recoveryListener, this::recoverFromStore);
                 break;
             case PEER:
+                //副本分片从主分片恢复   sourceservice 是master target是本地需要恢复的
                 try {
                     markAsRecovering("from " + recoveryState.getSourceNode(), recoveryState);
                     recoveryTargetService.startRecovery(this, recoveryState.getSourceNode(), recoveryListener);
@@ -2586,11 +2596,13 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
                 }
                 break;
             case SNAPSHOT:
+                //快照恢复
                 final String repo = ((SnapshotRecoverySource) recoveryState.getRecoverySource()).snapshot().getRepository();
                 executeRecovery("from snapshot",
                     recoveryState, recoveryListener, l -> restoreFromRepository(repositoriesService.repository(repo), l));
                 break;
             case LOCAL_SHARDS:
+                //从本地节点的其他分片恢复
                 final IndexMetadata indexMetadata = indexSettings().getIndexMetadata();
                 final Index resizeSourceIndex = indexMetadata.getResizeSourceIndex();
                 final List<IndexShard> startedShards = new ArrayList<>();
@@ -2638,9 +2650,11 @@ public class IndexShard extends AbstractIndexShardComponent implements IndicesCl
         markAsRecovering(reason, recoveryState); // mark the shard as recovering on the cluster state thread
         threadPool.generic().execute(ActionRunnable.wrap(ActionListener.wrap(r -> {
                 if (r) {
+                    //主分片恢复完成 然后发送internal:cluster/shard/started  ShardStateAction的messageReceive接收到消息后 提交一个更新的task
                     recoveryListener.onRecoveryDone(recoveryState);
                 }
             },
+            //如果恢复失败 关闭并移除shard 同时向master发送internal:cluster/shard/failure的消息
             e -> recoveryListener.onRecoveryFailure(recoveryState, new RecoveryFailedException(recoveryState, null, e), true)), action));
     }
 

@@ -99,6 +99,7 @@ public class TransportGetAction extends TransportSingleShardAction<GetRequest, G
         IndexService indexService = indicesService.indexServiceSafe(shardId.getIndex());
         IndexShard indexShard = indexService.getShard(shardId.id());
 
+        //默认是需要刷盘的。 如果需要刷盘并且非实时的
         if (request.refresh() && !request.realtime()) {
             indexShard.refresh("refresh_flag_get");
         }

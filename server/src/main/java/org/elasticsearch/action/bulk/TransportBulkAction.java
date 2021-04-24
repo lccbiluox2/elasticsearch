@@ -182,6 +182,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
             }
         }
 
+        //如果指定pipeline了
         if (hasIndexRequestsWithPipelines) {
             // this method (doExecute) will be called again, but with the bulk requests updated from the ingest node processing but
             // also with IngestService.NOOP_PIPELINE_NAME on each request. This ensures that this on the second time through this method,
@@ -195,9 +196,11 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                         .allMatch(IndexRequest::isPipelineResolved);
                     assert arePipelinesResolved : bulkRequest;
                 }
+                //如果当前节点具备数据预处理资格
                 if (clusterService.localNode().isIngestNode()) {
                     processBulkIndexIngestRequest(task, bulkRequest, listener);
                 } else {
+                    //从可以执行预处理的节点中选择一个 选择方法是 Math.floor
                     ingestForwarder.forwardIngestRequest(BulkAction.INSTANCE, bulkRequest, listener);
                 }
             } catch (Exception e) {
@@ -206,6 +209,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
             return;
         }
 
+        //如果需要自动创建索引检查
         if (needToCheck()) {
             // Attempt to create all the indices that we're going to need during the bulk before we start.
             // Step 1: collect all the indices in the request
@@ -216,6 +220,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                         || request.versionType() == VersionType.EXTERNAL
                         || request.versionType() == VersionType.EXTERNAL_GTE)
                 .map(DocWriteRequest::index)
+                //只需要 非删除的 、EXTERNAL EXTERNAL_GTE的
                 .collect(Collectors.toSet());
             /* Step 2: filter that to indices that don't exist and we can create. At the same time build a map of indices we can't create
              * that we'll use when we try to run the requests. */
@@ -235,15 +240,19 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                 }
             }
             // Step 3: create all the indices that are missing, if there are any missing. start the bulk after all the creates come back.
+            //添加需要创建索引的index 如果不需要创建 直接提交bulk 请求
             if (autoCreateIndices.isEmpty()) {
                 executeBulk(task, bulkRequest, startTime, listener, responses, indicesThatCannotBeCreated);
             } else {
+                //否则先创建 再提交bulk
                 final AtomicInteger counter = new AtomicInteger(autoCreateIndices.size());
                 for (String index : autoCreateIndices) {
+                    //创建索引
                     createIndex(index, bulkRequest.timeout(), minNodeVersion,
                         new ActionListener<CreateIndexResponse>() {
                         @Override
                         public void onResponse(CreateIndexResponse result) {
+                            //如果全部成功后提交bulk
                             if (counter.decrementAndGet() == 0) {
                                 threadPool.executor(ThreadPool.Names.WRITE).execute(
                                     () -> executeBulk(task, bulkRequest, startTime, listener, responses, indicesThatCannotBeCreated));
@@ -254,6 +263,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                         public void onFailure(Exception e) {
                             if (!(ExceptionsHelper.unwrapCause(e) instanceof ResourceAlreadyExistsException)) {
                                 // fail all requests involving this index, if create didn't work
+                                //如果失败 设置失败原因  并把bulk中该条失败的设置为null
                                 for (int i = 0; i < bulkRequest.requests.size(); i++) {
                                     DocWriteRequest<?> request = bulkRequest.requests.get(i);
                                     if (request != null && setResponseFailureIfIndexMatches(responses, i, request, index, e)) {
@@ -261,6 +271,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                                     }
                                 }
                             }
+                            //如果所有索引都创建成功  提交bulk  因为可能bulk中有多条记录是同一个index的操作  如果某一条索引关联的index创建失败 其他成功了cout也会--
                             if (counter.decrementAndGet() == 0) {
                                 executeBulk(task, bulkRequest, startTime, ActionListener.wrap(listener::onResponse, inner -> {
                                     inner.addSuppressed(e);
@@ -440,17 +451,22 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
         protected void doRun() {
             assert bulkRequest != null;
             final ClusterState clusterState = observer.setAndGetObservedState();
+            //如果索引是只读的  可能是磁盘满了 通过设置"index.blocks.read_only_allow_delete":"false"参数
             if (handleBlockExceptions(clusterState)) {
                 return;
             }
             final ConcreteIndices concreteIndices = new ConcreteIndices(clusterState, indexNameExpressionResolver);
+            // 获取集群元数据
             Metadata metadata = clusterState.metadata();
             for (int i = 0; i < bulkRequest.requests.size(); i++) {
+                // 获取DocWriteRequest
                 DocWriteRequest<?> docWriteRequest = bulkRequest.requests.get(i);
                 //the request can only be null because we set it to null in the previous step, so it gets ignored
+                // 请求不能为null，如果我们在上一步中将它设置为null，因此它将被忽略
                 if (docWriteRequest == null) {
                     continue;
                 }
+                //如果某些index不可被新增或者索引已经关闭
                 if (addFailureIfIndexIsUnavailable(docWriteRequest, i, concreteIndices, metadata)) {
                     continue;
                 }
@@ -460,13 +476,17 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                         case CREATE:
                         case INDEX:
                             IndexRequest indexRequest = (IndexRequest) docWriteRequest;
+                            //索引元信息
                             final IndexMetadata indexMetadata = metadata.index(concreteIndex);
                             MappingMetadata mappingMd = indexMetadata.mappingOrDefault();
                             Version indexCreated = indexMetadata.getCreationVersion();
                             indexRequest.resolveRouting(metadata);
+                            //检查创建路由和主键id  如果版本在在V_6_0_0_beta1 之后用 如果版本在在V_6_0_0_beta1
+                            // 之后用 base64UUID()其他用 legacyBase64UUID  设置ID
                             indexRequest.process(indexCreated, mappingMd, concreteIndex.getName());
                             break;
                         case UPDATE:
+                            //通过id找路由 如果设置别名 也会找别名
                             TransportUpdateAction.resolveAndValidateRouting(metadata, concreteIndex.getName(),
                                 (UpdateRequest) docWriteRequest);
                             break;
@@ -480,6 +500,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                         default: throw new AssertionError("request type not supported: [" + docWriteRequest.opType() + "]");
                     }
                 } catch (ElasticsearchParseException | IllegalArgumentException | RoutingMissingException e) {
+                    //设置失败信息 并不会throw异常
                     BulkItemResponse.Failure failure = new BulkItemResponse.Failure(concreteIndex.getName(), docWriteRequest.type(),
                         docWriteRequest.id(), e);
                     BulkItemResponse bulkItemResponse = new BulkItemResponse(i, docWriteRequest.opType(), failure);
@@ -491,6 +512,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
 
             // first, go over all the requests and create a ShardId -> Operations mapping
             Map<ShardId, List<BulkItemRequest>> requestsByShard = new HashMap<>();
+            //把bulk里面的request 按照shard 放到不同的集合中
             for (int i = 0; i < bulkRequest.requests.size(); i++) {
                 DocWriteRequest<?> request = bulkRequest.requests.get(i);
                 if (request == null) {
@@ -514,9 +536,12 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
             for (Map.Entry<ShardId, List<BulkItemRequest>> entry : requestsByShard.entrySet()) {
                 final ShardId shardId = entry.getKey();
                 final List<BulkItemRequest> requests = entry.getValue();
+                //封装到不同的bulkshard request中
                 BulkShardRequest bulkShardRequest = new BulkShardRequest(shardId, bulkRequest.getRefreshPolicy(),
                         requests.toArray(new BulkItemRequest[requests.size()]));
+                //设置足够的活动分片
                 bulkShardRequest.waitForActiveShards(bulkRequest.waitForActiveShards());
+                //超时时间
                 bulkShardRequest.timeout(bulkRequest.timeout());
                 bulkShardRequest.routedBasedOnClusterVersion(clusterState.version());
                 if (task != null) {
@@ -532,6 +557,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                             }
                             responses.set(bulkItemResponse.getItemId(), bulkItemResponse);
                         }
+                        //如果全部执行成功
                         if (counter.decrementAndGet() == 0) {
                             finishHim();
                         }
@@ -603,10 +629,12 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
         private boolean addFailureIfIndexIsUnavailable(DocWriteRequest<?> request, int idx, final ConcreteIndices concreteIndices,
                 final Metadata metadata) {
             IndexNotFoundException cannotCreate = indicesThatCannotBeCreated.get(request.index());
+            // 索引不存在，那么直接报错
             if (cannotCreate != null) {
                 addFailure(request, idx, cannotCreate);
                 return true;
             }
+            // 如果索引存在
             Index concreteIndex = concreteIndices.getConcreteIndex(request.index());
             if (concreteIndex == null) {
                 try {
@@ -656,6 +684,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
         Index resolveIfAbsent(DocWriteRequest<?> request) {
             Index concreteIndex = indices.get(request.index());
             if (concreteIndex == null) {
+                // 如果索引类型等于创建
                 boolean includeDataStreams = request.opType() == DocWriteRequest.OpType.CREATE;
                 concreteIndex = indexNameExpressionResolver.concreteWriteIndex(state, request, includeDataStreams);
                 indices.put(request.index(), concreteIndex);

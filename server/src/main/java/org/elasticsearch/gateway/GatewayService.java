@@ -153,10 +153,12 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
         final ClusterState state = event.state();
 
+        //只有master节点才有资格
         if (state.nodes().isLocalNodeElectedMaster() == false) {
             // not our job to recover
             return;
         }
+        //如果集群已经恢复
         if (state.blocks().hasGlobalBlock(STATE_NOT_RECOVERED_BLOCK) == false) {
             // already recovered
             return;
@@ -197,6 +199,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
                     reason = "expecting [" + expectedMasterNodes + "] master nodes, but only have [" + nodes.getMasterNodes().size() + "]";
                 }
             }
+            //恢复元信息
             performStateRecovery(enforceRecoverAfterTime, reason);
         }
     }

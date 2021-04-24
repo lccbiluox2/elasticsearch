@@ -37,6 +37,8 @@ import static org.elasticsearch.index.seqno.SequenceNumbers.UNASSIGNED_SEQ_NO;
 /**
  * Generic interface to group ActionRequest, which perform writes to a single document
  * Action requests implementing this can be part of {@link org.elasticsearch.action.bulk.BulkRequest}
+ *
+ * ActionRequest组的通用接口，它执行对单个文档的写入操作请求实现这一点可以是{@link org.elasticsearch.action.bulk.BulkRequest}的一部分
  */
 public interface DocWriteRequest<T> extends IndicesRequest {
 
@@ -172,6 +174,8 @@ public interface DocWriteRequest<T> extends IndicesRequest {
         /**
          * Creates the resource. Simply adds it to the index, if there is an existing
          * document with the id, then it won't be removed.
+         *
+         * 创建资源。只需将其添加到索引中，如果存在具有id的现有文档，则不会删除它。
          */
         CREATE(1),
         /** Updates a document */

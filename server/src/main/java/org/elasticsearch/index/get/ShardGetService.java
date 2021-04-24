@@ -169,6 +169,7 @@ public final class ShardGetService extends AbstractIndexShardComponent {
     private GetResult innerGet(String type, String id, String[] gFields, boolean realtime, long version, VersionType versionType,
                                long ifSeqNo, long ifPrimaryTerm, FetchSourceContext fetchSourceContext) {
         fetchSourceContext = normalizeFetchSourceContent(fetchSourceContext, gFields);
+        //如果没有指定搜索类型 找到这个索引的所有类型
         if (type == null || type.equals("_all")) {
             DocumentMapper mapper = mapperService.documentMapper();
             type = mapper == null ? null : mapper.type();
@@ -191,6 +192,7 @@ public final class ShardGetService extends AbstractIndexShardComponent {
 
         try {
             // break between having loaded it from translog (so we only have _source), and having a document to load
+            //从上一步获取到的id lucene的id 然后获取到完整的信息
             return innerGetLoadFromStoredFields(type, id, gFields, fetchSourceContext, get, mapperService);
         } finally {
             get.close();

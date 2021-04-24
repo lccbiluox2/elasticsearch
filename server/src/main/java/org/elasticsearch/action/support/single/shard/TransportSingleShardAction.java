@@ -216,7 +216,9 @@ public abstract class TransportSingleShardAction<Request extends SingleShardRequ
                 lastFailure = currentFailure;
                 this.lastFailure = currentFailure;
             }
+            //获取下一个副本
             final ShardRouting shardRouting = shardIt.nextOrNull();
+            //如果所有副本都失败 返回失败
             if (shardRouting == null) {
                 Exception failure = lastFailure;
                 if (failure == null || isShardNotAvailableException(failure)) {
@@ -229,8 +231,10 @@ public abstract class TransportSingleShardAction<Request extends SingleShardRequ
                 listener.onFailure(failure);
                 return;
             }
+            //通过路由表找这个node
             DiscoveryNode node = nodes.get(shardRouting.currentNodeId());
             if (node == null) {
+                //没有的话 找下一个分片去查
                 onFailure(shardRouting, new NoShardAvailableActionException(shardRouting.shardId()));
             } else {
                 internalRequest.request().internalShardId = shardRouting.shardId();
@@ -263,6 +267,7 @@ public abstract class TransportSingleShardAction<Request extends SingleShardRequ
 
                         @Override
                         public void handleException(TransportException exp) {
+                            //失败的话 找下一个分片继续执行 入口仍然是这个方法只是加了Exception
                             onFailure(shardRouting, exp);
                         }
                 });
