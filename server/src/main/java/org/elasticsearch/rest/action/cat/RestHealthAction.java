@@ -62,6 +62,11 @@ public class RestHealthAction extends AbstractCatAction {
         });
     }
 
+    /**
+     * 构建表头
+     * @param request
+     * @return
+     */
     @Override
     protected Table getTableWithHeader(final RestRequest request) {
         Table t = new Table();
@@ -83,6 +88,12 @@ public class RestHealthAction extends AbstractCatAction {
         return t;
     }
 
+    /**
+     * 然后构建一个类似表单的table来构建返回结果的视图：
+     * @param health
+     * @param request
+     * @return
+     */
     private Table buildTable(final ClusterHealthResponse health, final RestRequest request) {
         Table t = getTableWithHeader(request);
         t.startRow();

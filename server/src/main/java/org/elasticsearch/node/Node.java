@@ -681,6 +681,7 @@ public class Node implements Closeable {
                     () -> clusterService.localNode().getId(), transportService.getRemoteClusterService());
 
             logger.debug("initializing HTTP handlers ...");
+            // 加载集群命令
             actionModule.initRestHandlers(() -> clusterService.state().nodes());
             logger.info("initialized");
 
