@@ -69,6 +69,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.common.io.FileSystemUtils.isAccessibleDirectory;
+import org.elasticsearch.plugins.ExtendedPluginsClassLoader;
+import org.elasticsearch.plugin.repository.url.URLRepositoryPlugin;
+import org.elasticsearch.percolator.PercolatorPlugin;
 
 public class PluginsService implements ReportingService<PluginsAndModules> {
 
@@ -331,6 +334,16 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
                     }
                     if (seen.add(plugin.getFileName().toString()) == false) {
                         throw new IllegalStateException("duplicate plugin: " + plugin);
+                    }
+                    // TODO: 自己家的逻辑排除这两个文件
+                    if(!plugin.toFile().isDirectory()){
+                        continue;
+                    }
+                    if(plugin.toFile().getName().equals("tribe")){
+                        continue;
+                    }
+                    if(plugin.toFile().getName().equals("examples")){
+                        continue;
                     }
                     plugins.add(plugin);
                 }

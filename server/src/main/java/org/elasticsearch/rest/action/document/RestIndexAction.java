@@ -128,6 +128,7 @@ public class RestIndexAction extends BaseRestHandler {
     @Override
     public RestChannelConsumer prepareRequest(final RestRequest request, final NodeClient client) throws IOException {
         IndexRequest indexRequest;
+        // 获取请求中的的index,type,id,并构建一个IndexRequest,用于创建索引的请求
         final String type = request.param("type");
         if (type != null && type.equals(MapperService.SINGLE_MAPPING_NAME) == false) {
             deprecationLogger.deprecatedAndMaybeLog("index_with_types", TYPES_DEPRECATION_MESSAGE);
@@ -136,6 +137,7 @@ public class RestIndexAction extends BaseRestHandler {
             indexRequest = new IndexRequest(request.param("index"));
             indexRequest.id(request.param("id"));
         }
+        // 获取请求中的routing参数
         indexRequest.routing(request.param("routing"));
         indexRequest.setPipeline(request.param("pipeline"));
         indexRequest.source(request.requiredContent(), request.getXContentType());

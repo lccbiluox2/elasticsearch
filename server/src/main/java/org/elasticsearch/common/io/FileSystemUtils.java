@@ -68,6 +68,7 @@ public final class FileSystemUtils {
 
     /**
      * Check whether the file denoted by the given path is a desktop services store created by Finder on macOS.
+     * 检查指定路径指示的文件是否为Finder在macOS上创建的桌面服务存储。
      *
      * @param path the path
      * @return true if the current system is macOS and the specified file appears to be a desktop services store file
