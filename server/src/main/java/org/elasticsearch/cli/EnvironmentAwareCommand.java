@@ -60,6 +60,18 @@ public abstract class EnvironmentAwareCommand extends Command {
         this.settingOption = parser.accepts("E", "Configure a setting").withRequiredArg().ofType(KeyValuePair.class);
     }
 
+    /**
+     * 方法前面是根据传参去判断配置的，如果配置为空，就会直接跳到执行 putSystemPropertyIfSettingIsMissing 方法，
+     * 这里会配置三个属性：path.data、path.home、path.logs 设置 es 的 data、home、logs 目录，
+     * 它这里是根据我们 ide 配置的 vm options 进行设置的，这也是为什么我们上篇文章说的配置信息，
+     * 如果不配置的话就会直接报错。
+     *
+     * https://blog.csdn.net/tzs_1041218129/article/details/81675984
+     *
+     * @param terminal
+     * @param options
+     * @throws Exception
+     */
     @Override
     protected void execute(Terminal terminal, OptionSet options) throws Exception {
         final Map<String, String> settings = new HashMap<>();
@@ -79,10 +91,13 @@ public abstract class EnvironmentAwareCommand extends Command {
             settings.put(kvp.key, kvp.value);
         }
 
+        //6、根据我们ide配置的 vm options 进行设置path.data、path.home、path.logs
         putSystemPropertyIfSettingIsMissing(settings, "path.data", "es.path.data");
         putSystemPropertyIfSettingIsMissing(settings, "path.home", "es.path.home");
         putSystemPropertyIfSettingIsMissing(settings, "path.logs", "es.path.logs");
 
+        //7、先调用 createEnv 创建环境
+        //9、执行elasticsearch的execute方法，elasticsearch中重写了EnvironmentAwareCommand中的抽象execute方法
         execute(terminal, options, createEnv(settings));
     }
 
@@ -93,10 +108,12 @@ public abstract class EnvironmentAwareCommand extends Command {
 
     /** Create an {@link Environment} for the command to use. Overrideable for tests. */
     protected final Environment createEnv(final Settings baseSettings, final Map<String, String> settings) throws UserException {
+        //8、读取我们 vm options 中配置的 es.path.conf
         final String esPathConf = System.getProperty("es.path.conf");
         if (esPathConf == null) {
             throw new UserException(ExitCodes.CONFIG, "the system property [es.path.conf] must be set");
         }
+        //8、准备环境 prepareEnvironment
         return InternalSettingsPreparer.prepareEnvironment(baseSettings, settings,
             getConfigPath(esPathConf),
             // HOSTNAME is set by elasticsearch-env and elasticsearch-env.bat so it is always available
@@ -110,6 +127,7 @@ public abstract class EnvironmentAwareCommand extends Command {
 
     /** Ensure the given setting exists, reading it from system properties if not already set. */
     private static void putSystemPropertyIfSettingIsMissing(final Map<String, String> settings, final String setting, final String key) {
+        //获取key（es.path.data）找系统设置
         final String value = System.getProperty(key);
         if (value != null) {
             if (settings.containsKey(setting)) {

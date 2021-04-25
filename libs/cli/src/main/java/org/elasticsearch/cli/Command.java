@@ -124,6 +124,7 @@ public abstract class Command implements Closeable {
             terminal.setVerbosity(Terminal.Verbosity.NORMAL);
         }
 
+        //5、执行 EnvironmentAwareCommand 中的 execute()，（重写了command里面抽象的execute方法）
         execute(terminal, options);
     }
 

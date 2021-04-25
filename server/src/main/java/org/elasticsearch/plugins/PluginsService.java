@@ -69,9 +69,54 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.common.io.FileSystemUtils.isAccessibleDirectory;
-import org.elasticsearch.plugins.ExtendedPluginsClassLoader;
-import org.elasticsearch.plugin.repository.url.URLRepositoryPlugin;
-import org.elasticsearch.percolator.PercolatorPlugin;
+
+//import org.elasticsearch.plugins.ExtendedPluginsClassLoader;
+//import org.elasticsearch.plugin.repository.url.URLRepositoryPlugin;
+//import org.elasticsearch.percolator.PercolatorPlugin;
+//import org.elasticsearch.kibana.KibanaPlugin;
+////import org.elasticsearch.discovery.file.FileBasedDiscoveryPlugin;
+////import org.elasticsearch.tribe.TribePlugin;
+////import org.elasticsearch.retention_lease_bwc.AddRetentionLeasePlugin;
+//import org.elasticsearch.percolator.PercolatorPlugin;
+//import org.elasticsearch.plugin.repository.url.URLRepositoryPlugin;
+//import org.elasticsearch.tasksplugin.TasksPlugin;
+//import org.elasticsearch.transport.Netty4Plugin;
+//import org.elasticsearch.kibana.KibanaPlugin;
+//import org.elasticsearch.systemd.SystemdPlugin;
+//import org.elasticsearch.tasksplugin.TasksPlugin;
+//import org.elasticsearch.geo.GeoPlugin;
+//import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
+//import org.elasticsearch.geo.GeoPlugin;
+//import org.elasticsearch.ingest.geoip.IngestGeoIpPlugin;
+//import org.elasticsearch.ingest.geoip.IngestGeoIpPlugin;
+//import org.elasticsearch.index.mapper.MapperExtrasPlugin;
+//import org.elasticsearch.join.ParentJoinPlugin;
+//import org.elasticsearch.index.rankeval.RankEvalPlugin;
+//import org.elasticsearch.index.reindex.ReindexPlugin;
+//import org.elasticsearch.script.expression.ExpressionPlugin;
+//import org.elasticsearch.script.mustache.MustachePlugin;
+//import org.elasticsearch.ingest.useragent.IngestUserAgentPlugin;
+//import org.elasticsearch.search.aggregations.matrix.MatrixAggregationPlugin;
+//import org.elasticsearch.plugin.analysis.icu.AnalysisICUPlugin;
+//import org.elasticsearch.transport.nio.NioTransportPlugin;
+//import org.elasticsearch.discovery.ec2.Ec2DiscoveryPlugin;
+//import org.elasticsearch.plugin.analysis.AnalysisPhoneticPlugin;
+//import org.elasticsearch.plugin.discovery.gce.GceDiscoveryPlugin;
+//import org.elasticsearch.plugin.mapper.MapperMurmur3Plugin;
+//import org.elasticsearch.repositories.s3.S3RepositoryPlugin;
+//import org.elasticsearch.plugin.analysis.kuromoji.AnalysisKuromojiPlugin;
+//import org.elasticsearch.plugin.analysis.stempel.AnalysisStempelPlugin;
+//import org.elasticsearch.repositories.gcs.GoogleCloudStoragePlugin;
+//import org.elasticsearch.plugin.store.smb.SMBStorePlugin;
+//import org.elasticsearch.repositories.hdfs.HdfsPlugin;
+//import org.elasticsearch.plugin.mapper.AnnotatedTextPlugin;
+//import org.elasticsearch.repositories.azure.AzureRepositoryPlugin;
+//import org.elasticsearch.ingest.attachment.IngestAttachmentPlugin;
+//import org.elasticsearch.plugin.analysis.ukrainian.AnalysisUkrainianPlugin;
+//import org.elasticsearch.plugin.analysis.nori.AnalysisNoriPlugin;
+//import org.elasticsearch.plugin.mapper.MapperSizePlugin;
+//import org.elasticsearch.plugin.discovery.azure.classic.AzureDiscoveryPlugin;
+//import org.elasticsearch.plugin.analysis.smartcn.AnalysisSmartChinesePlugin;
 
 public class PluginsService implements ReportingService<PluginsAndModules> {
 
@@ -99,7 +144,8 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
 
     /**
      * Constructs a new PluginService
-     * @param settings The settings of the system
+     *
+     * @param settings         The settings of the system
      * @param modulesDirectory The directory modules exist in, or null if modules should not be loaded from the filesystem
      * @param pluginsDirectory The directory plugins exist in, or null if plugins should not be loaded from the filesystem
      * @param classpathPlugins Plugins that exist in the classpath which should be loaded
@@ -122,7 +168,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         for (Class<? extends Plugin> pluginClass : classpathPlugins) {
             Plugin plugin = loadPlugin(pluginClass, settings, configPath);
             PluginInfo pluginInfo = new PluginInfo(pluginClass.getName(), "classpath plugin", "NA", Version.CURRENT, "1.8",
-                                                   pluginClass.getName(), Collections.emptyList(), false);
+                pluginClass.getName(), Collections.emptyList(), false);
             if (logger.isTraceEnabled()) {
                 logger.trace("plugin loaded from classpath [{}]", pluginInfo);
             }
@@ -181,10 +227,10 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
             }
             if (!missingPlugins.isEmpty()) {
                 final String message = String.format(
-                        Locale.ROOT,
-                        "missing mandatory plugins [%s], found plugins [%s]",
-                        Strings.collectionToDelimitedString(missingPlugins, ", "),
-                        Strings.collectionToDelimitedString(pluginsNames, ", "));
+                    Locale.ROOT,
+                    "missing mandatory plugins [%s], found plugins [%s]",
+                    Strings.collectionToDelimitedString(missingPlugins, ", "),
+                    Strings.collectionToDelimitedString(pluginsNames, ", "));
                 throw new IllegalStateException(message);
             }
         }
@@ -225,11 +271,11 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
                 final String feature = maybeFeature.get();
                 if (features.containsKey(feature)) {
                     final String message = String.format(
-                            Locale.ROOT,
-                            "duplicate feature [%s] in plugin [%s], already added in [%s]",
-                            feature,
-                            plugin.v1().getName(),
-                            features.get(feature));
+                        Locale.ROOT,
+                        "duplicate feature [%s] in plugin [%s], already added in [%s]",
+                        feature,
+                        plugin.v1().getName(),
+                        features.get(feature));
                     throw new IllegalArgumentException(message);
                 }
                 features.put(feature, plugin.v1().getName());
@@ -257,7 +303,9 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         return builders;
     }
 
-    /** Returns all classes injected into guice by plugins which extend {@link LifecycleComponent}. */
+    /**
+     * Returns all classes injected into guice by plugins which extend {@link LifecycleComponent}.
+     */
     public Collection<Class<? extends LifecycleComponent>> getGuiceServiceClasses() {
         List<Class<? extends LifecycleComponent>> services = new ArrayList<>();
         for (Tuple<PluginInfo, Plugin> plugin : plugins) {
@@ -336,13 +384,13 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
                         throw new IllegalStateException("duplicate plugin: " + plugin);
                     }
                     // TODO: 自己家的逻辑排除这两个文件
-                    if(!plugin.toFile().isDirectory()){
+                    if (!plugin.toFile().isDirectory()) {
                         continue;
                     }
-                    if(plugin.toFile().getName().equals("tribe")){
+                    if (plugin.toFile().getName().equals("tribe")) {
                         continue;
                     }
-                    if(plugin.toFile().getName().equals("examples")){
+                    if (plugin.toFile().getName().equals("examples")) {
                         continue;
                     }
                     plugins.add(plugin);
@@ -375,21 +423,25 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
                 final String fileName = removing.getFileName().toString();
                 final String name = fileName.substring(1 + fileName.indexOf("-"));
                 final String message = String.format(
-                        Locale.ROOT,
-                        "found file [%s] from a failed attempt to remove the plugin [%s]; execute [elasticsearch-plugin remove %2$s]",
-                        removing,
-                        name);
+                    Locale.ROOT,
+                    "found file [%s] from a failed attempt to remove the plugin [%s]; execute [elasticsearch-plugin remove %2$s]",
+                    removing,
+                    name);
                 throw new IllegalStateException(message);
             }
         }
     }
 
-    /** Get bundles for plugins installed in the given modules directory. */
+    /**
+     * Get bundles for plugins installed in the given modules directory.
+     */
     static Set<Bundle> getModuleBundles(Path modulesDirectory) throws IOException {
         return findBundles(modulesDirectory, "module");
     }
 
-    /** Get bundles for plugins installed in the given plugins directory. */
+    /**
+     * Get bundles for plugins installed in the given plugins directory.
+     */
     static Set<Bundle> getPluginBundles(final Path pluginsDirectory) throws IOException {
         return findBundles(pluginsDirectory, "plugin");
     }
@@ -413,7 +465,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
             info = PluginInfo.readFromProperties(plugin);
         } catch (final IOException e) {
             throw new IllegalStateException("Could not load plugin descriptor for " + type +
-                                            " directory [" + plugin.getFileName() + "]", e);
+                " directory [" + plugin.getFileName() + "]", e);
         }
         final Bundle bundle = new Bundle(info, plugin);
         if (bundles.add(bundle) == false) {
@@ -424,7 +476,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
 
     /**
      * Return the given bundles, sorted in dependency loading order.
-     *
+     * <p>
      * This sort is stable, so that if two plugins do not have any interdependency,
      * their relative order from iteration of the provided set will not change.
      *
@@ -474,7 +526,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         sortedBundles.add(bundle);
     }
 
-    private List<Tuple<PluginInfo,Plugin>> loadBundles(Set<Bundle> bundles) {
+    private List<Tuple<PluginInfo, Plugin>> loadBundles(Set<Bundle> bundles) {
         List<Tuple<PluginInfo, Plugin>> plugins = new ArrayList<>();
         Map<String, Plugin> loaded = new HashMap<>();
         Map<String, Set<URL>> transitiveUrls = new HashMap<>();
@@ -507,14 +559,14 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
                 intersection.retainAll(pluginUrls);
                 if (intersection.isEmpty() == false) {
                     throw new IllegalStateException("jar hell! extended plugins " + exts +
-                                                    " have duplicate codebases with each other: " + intersection);
+                        " have duplicate codebases with each other: " + intersection);
                 }
 
                 intersection = new HashSet<>(bundle.urls);
                 intersection.retainAll(pluginUrls);
                 if (intersection.isEmpty() == false) {
                     throw new IllegalStateException("jar hell! duplicate codebases with extended plugin [" +
-                                                    extendedPlugin + "]: " + intersection);
+                        extendedPlugin + "]: " + intersection);
                 }
 
                 urls.addAll(pluginUrls);
@@ -617,11 +669,11 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         final Class[] parameterTypes = constructor.getParameterTypes();
         try {
             if (constructor.getParameterCount() == 2 && parameterTypes[0] == Settings.class && parameterTypes[1] == Path.class) {
-                return (Plugin)constructor.newInstance(settings, configPath);
+                return (Plugin) constructor.newInstance(settings, configPath);
             } else if (constructor.getParameterCount() == 1 && parameterTypes[0] == Settings.class) {
-                return (Plugin)constructor.newInstance(settings);
+                return (Plugin) constructor.newInstance(settings);
             } else if (constructor.getParameterCount() == 0) {
-                return (Plugin)constructor.newInstance();
+                return (Plugin) constructor.newInstance();
             } else {
                 throw new IllegalStateException(signatureMessage(pluginClass));
             }
@@ -632,16 +684,16 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
 
     private String signatureMessage(final Class<? extends Plugin> clazz) {
         return String.format(
-                Locale.ROOT,
-                "no public constructor of correct signature for [%s]; must be [%s], [%s], or [%s]",
-                clazz.getName(),
-                "(org.elasticsearch.common.settings.Settings,java.nio.file.Path)",
-                "(org.elasticsearch.common.settings.Settings)",
-                "()");
+            Locale.ROOT,
+            "no public constructor of correct signature for [%s]; must be [%s], [%s], or [%s]",
+            clazz.getName(),
+            "(org.elasticsearch.common.settings.Settings,java.nio.file.Path)",
+            "(org.elasticsearch.common.settings.Settings)",
+            "()");
     }
 
     public <T> List<T> filterPlugins(Class<T> type) {
         return plugins.stream().filter(x -> type.isAssignableFrom(x.v2().getClass()))
-            .map(p -> ((T)p.v2())).collect(Collectors.toList());
+            .map(p -> ((T) p.v2())).collect(Collectors.toList());
     }
 }

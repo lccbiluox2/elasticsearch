@@ -107,6 +107,7 @@ final class Bootstrap {
         final Logger logger = LogManager.getLogger(Bootstrap.class);
 
         // check if the user is running as root, and bail
+        // 检查是不是root用户启动
         if (Natives.definitelyRunningAsRoot()) {
             throw new RuntimeException("can not run elasticsearch as root");
         }
@@ -167,6 +168,7 @@ final class Bootstrap {
     }
 
     private void setup(boolean addShutdownHook, Environment environment) throws BootstrapException {
+        //根据环境得到配置
         Settings settings = environment.settings();
 
         try {
@@ -224,6 +226,7 @@ final class Bootstrap {
             throw new BootstrapException(e);
         }
 
+        /** 创建节点 */
         node = new Node(environment) {
             @Override
             protected void validateNodeBeforeAcceptingRequests(
@@ -344,13 +347,19 @@ final class Bootstrap {
         // the security manager is installed
         BootstrapInfo.init();
 
+        /**
+         * 12、创建一个 Bootstrap 实例
+         */
         INSTANCE = new Bootstrap();
 
+        //如果注册了安全模块则将相关配置加载进来
         final SecureSettings keystore = loadSecureSettings(initialEnv);
+        // 创建运行环境
         final Environment environment = createEnvironment(pidFile, keystore, initialEnv.settings(), initialEnv.configFile());
 
         LogConfigurator.setNodeName(Node.NODE_NAME_SETTING.get(environment.settings()));
         try {
+            //13、log 配置环境
             LogConfigurator.configure(environment);
         } catch (IOException e) {
             throw new BootstrapException(e);
@@ -363,6 +372,7 @@ final class Bootstrap {
                             System.getProperty("java.home"));
             new DeprecationLogger(LogManager.getLogger(Bootstrap.class)).deprecatedAndMaybeLog("java_version_11_required", message);
         }
+        // 创建pid file
         if (environment.pidFile() != null) {
             try {
                 PidFile.create(environment.pidFile(), true);
@@ -383,22 +393,31 @@ final class Bootstrap {
             }
 
             // fail if somebody replaced the lucene jars
+            //14、检查Lucene版本 如果有人替换了lucene jar就会失败
             checkLucene();
 
             // install the default uncaught exception handler; must be done before security is
             // initialized as we do not want to grant the runtime permission
             // setDefaultUncaughtExceptionHandler
+            //
+            // 安装默认的未捕获异常处理程序;必须在安全初始化之前完成，因为我们不想授予运行时
+            // 权限setDefaultUncaughtExceptionHandler
             Thread.setDefaultUncaughtExceptionHandler(new ElasticsearchUncaughtExceptionHandler());
 
+            /** bootstrap 启动*/
             INSTANCE.setup(true, environment);
 
             try {
                 // any secure settings must be read during node construction
+                // 任何安全设置都必须在节点构建过程中读取
                 IOUtils.close(keystore);
             } catch (IOException e) {
                 throw new BootstrapException(e);
             }
 
+            /**
+             * //26、调用 start 方法
+             */
             INSTANCE.start();
 
             // We don't close stderr if `--quiet` is passed, because that

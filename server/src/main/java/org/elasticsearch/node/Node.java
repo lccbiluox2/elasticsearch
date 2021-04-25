@@ -708,6 +708,9 @@ public class Node implements Closeable {
         logger.info("starting ...");
         pluginLifecycleComponents.forEach(LifecycleComponent::start);
 
+        //1、利用Guice获取上述注册的各种模块以及服务
+        // Node 的启动其实就是 node 里每个组件的启动，同样的，分别调用不同的实例的 start
+        // 方法来启动这个组件, 如下：
         injector.getInstance(MappingUpdatedAction.class).setClient(client);
         injector.getInstance(IndicesService.class).start();
         injector.getInstance(IndicesClusterStateService.class).start();
@@ -764,6 +767,7 @@ public class Node implements Closeable {
             pluginsService.filterPlugins(Plugin.class).stream()
                 .flatMap(p -> p.getBootstrapChecks().stream()).collect(Collectors.toList()));
 
+        //2、将当前节点加入到一个集群簇中去,并启动当前节点
         clusterService.addStateApplier(transportService.getTaskManager());
         // start after transport service so the local disco is known
         discovery.start(); // start before cluster service so that it can set initial state on ClusterApplierService
