@@ -24,6 +24,9 @@ import java.util.List;
 /**
  * This class exists solely as an intermediate layer to avoid causing PluginsService
  * to load ExtendedPluginsClassLoader when used in the transport client.
+ *
+ * 这个类仅仅作为一个中间层存在，以避免在传输客户机中使用PluginsService时导致pluginsclassloader加载
+ * ExtendedPluginsClassLoader。
  */
 class PluginLoaderIndirection {
 

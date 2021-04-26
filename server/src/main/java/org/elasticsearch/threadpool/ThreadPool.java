@@ -192,6 +192,7 @@ public class ThreadPool implements ReportingService<ThreadPoolInfo>, Scheduler {
         builders.put(Names.FORCE_MERGE, new FixedExecutorBuilder(settings, Names.FORCE_MERGE, 1, -1));
         builders.put(Names.FETCH_SHARD_STORE,
                 new ScalingExecutorBuilder(Names.FETCH_SHARD_STORE, 1, 2 * allocatedProcessors, TimeValue.timeValueMinutes(5)));
+
         for (final ExecutorBuilder<?> builder : customBuilders) {
             if (builders.containsKey(builder.name())) {
                 throw new IllegalArgumentException("builder with name [" + builder.name() + "] already exists");
@@ -204,6 +205,8 @@ public class ThreadPool implements ReportingService<ThreadPoolInfo>, Scheduler {
 
         final Map<String, ExecutorHolder> executors = new HashMap<>();
         for (final Map.Entry<String, ExecutorBuilder> entry : builders.entrySet()) {
+            logger.info("分配线程池每种类型的情况：name:{}  value:{}",entry.getKey(),entry.getValue().getRegisteredSettings());
+
             final ExecutorBuilder.ExecutorSettings executorSettings = entry.getValue().getSettings(settings);
             final ExecutorHolder executorHolder = entry.getValue().build(executorSettings, threadContext);
             if (executors.containsKey(executorHolder.info.getName())) {
@@ -224,8 +227,12 @@ public class ThreadPool implements ReportingService<ThreadPoolInfo>, Scheduler {
                         .map(holder -> holder.info)
                         .collect(Collectors.toList());
         this.threadPoolInfo = new ThreadPoolInfo(infos);
+
+        logger.info("初始化Scheduler.initScheduler");
         this.scheduler = Scheduler.initScheduler(settings);
         TimeValue estimatedTimeInterval = ESTIMATED_TIME_INTERVAL_SETTING.get(settings);
+
+        logger.info("创建CachedTimeThread 并且设置成 daemon");
         this.cachedTimeThread = new CachedTimeThread(EsExecutors.threadName(settings, "[timer]"), estimatedTimeInterval.millis());
         this.cachedTimeThread.start();
     }
@@ -585,6 +592,7 @@ public class ThreadPool implements ReportingService<ThreadPoolInfo>, Scheduler {
                 relativeNanos = System.nanoTime();
                 absoluteMillis = System.currentTimeMillis();
                 try {
+                    //TODO: 这里睡觉是干嘛的？
                     Thread.sleep(interval);
                 } catch (InterruptedException e) {
                     running = false;
@@ -745,6 +753,8 @@ public class ThreadPool implements ReportingService<ThreadPoolInfo>, Scheduler {
     /**
      * Returns <code>true</code> if the given pool was terminated successfully. If the termination timed out,
      * the service is <code>null</code> this method will return <code>false</code>.
+     *
+     * 如果给定的池成功终止，返回true。如果终止超时，则该服务为null此方法将返回false。
      */
     public static boolean terminate(ThreadPool pool, long timeout, TimeUnit timeUnit) {
         if (pool != null) {

@@ -36,10 +36,17 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /**
  * Generic resource watcher service
  *
+ * 通用资源监视服务
+ *
  * Other elasticsearch services can register their resource watchers with this service using {@link #add(ResourceWatcher)}
  * method. This service will call {@link org.elasticsearch.watcher.ResourceWatcher#checkAndNotify()} method of all
  * registered watcher periodically. The frequency of checks can be specified using {@code resource.reload.interval} setting, which
  * defaults to {@code 60s}. The service can be disabled by setting {@code resource.reload.enabled} setting to {@code false}.
+ *
+ * 其他elasticsearch服务可以使用{@link #add(ResourceWatcher)}方法向该服务注册资源监控器。
+ * 这个服务会定期调用所有注册的观察者的{@link org.elasticsearch.watcher.ResourceWatcher#checkAndNotify()}方法。
+ * 检查的频率可以使用{@code resource.reload.interval}设置来指定，默认为{@code 60s}。
+ * 可以通过设置{@code resource.reload来禁用该服务。启用}设置为{@code false}。
  */
 public class ResourceWatcherService implements Closeable {
     private static final Logger logger = LogManager.getLogger(ResourceWatcherService.class);
@@ -95,6 +102,8 @@ public class ResourceWatcherService implements Closeable {
         mediumMonitor = new ResourceMonitor(interval, Frequency.MEDIUM);
         interval = RELOAD_INTERVAL_HIGH.get(settings);
         highMonitor = new ResourceMonitor(interval, Frequency.HIGH);
+
+        logger.info("初始化 5秒 30秒 60秒的 ResourceMonitor");
         if (enabled) {
             lowFuture = threadPool.scheduleWithFixedDelay(lowMonitor, lowMonitor.interval, Names.SAME);
             mediumFuture = threadPool.scheduleWithFixedDelay(mediumMonitor, mediumMonitor.interval, Names.SAME);

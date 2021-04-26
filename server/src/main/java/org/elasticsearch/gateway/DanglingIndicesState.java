@@ -52,6 +52,8 @@ import static java.util.Collections.unmodifiableMap;
  * The dangling indices state is responsible for finding new dangling indices (indices that have
  * their state written on disk, but don't exists in the metadata of the cluster), and importing
  * them into the cluster.
+ *
+ * 悬空索引状态负责寻找新的悬空索引(将其状态写入磁盘，但在集群的元数据中不存在的索引)，并将它们导入集群。
  */
 public class DanglingIndicesState implements ClusterStateListener {
 

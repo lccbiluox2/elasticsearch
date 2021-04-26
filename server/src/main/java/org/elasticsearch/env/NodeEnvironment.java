@@ -401,10 +401,13 @@ public final class NodeEnvironment  implements Closeable {
 
     /**
      * scans the node paths and loads existing metadata file. If not found a new meta data will be generated
+     *
+     * 扫描节点路径并加载现有元数据文件。如果没有找到一个新的元数据将生成
      */
     private static NodeMetadata loadNodeMetadata(Settings settings, Logger logger,
                                                  NodePath... nodePaths) throws IOException {
         final Path[] paths = Arrays.stream(nodePaths).map(np -> np.path).toArray(Path[]::new);
+        logger.info("加载node的NodeMetadata信息");
         NodeMetadata metadata = PersistedClusterStateService.nodeMetadata(paths);
         if (metadata == null) {
             // load legacy metadata

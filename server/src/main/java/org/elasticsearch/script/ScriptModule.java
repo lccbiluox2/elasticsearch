@@ -19,9 +19,12 @@
 
 package org.elasticsearch.script;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.settings.ClusterSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.query.IntervalFilterScript;
+import org.elasticsearch.node.Node;
 import org.elasticsearch.plugins.ScriptPlugin;
 import org.elasticsearch.search.aggregations.pipeline.MovingFunctionScript;
 
@@ -38,7 +41,10 @@ import java.util.stream.Stream;
  */
 public class ScriptModule {
 
+    private final Logger logger = LogManager.getLogger(Node.class);
+
     public static final Map<String, ScriptContext<?>> CORE_CONTEXTS;
+
     static {
         CORE_CONTEXTS = Stream.of(
             FieldScript.CONTEXT,
@@ -83,6 +89,7 @@ public class ScriptModule {
         for (ScriptPlugin plugin : scriptPlugins) {
             ScriptEngine engine = plugin.getScriptEngine(settings, contexts.values());
             if (engine != null) {
+                logger.info("获取脚本引擎：{}", engine.getType());
                 ScriptEngine existing = engines.put(engine.getType(), engine);
                 if (existing != null) {
                     throw new IllegalArgumentException("scripting language [" + engine.getType() + "] defined for engine [" +

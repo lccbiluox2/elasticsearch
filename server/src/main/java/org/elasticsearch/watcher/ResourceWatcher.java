@@ -34,6 +34,8 @@ public interface ResourceWatcher {
 
     /**
      * Called periodically by {@link ResourceWatcherService} so resource watcher can check the resource
+     *
+     * 由{@link ResourceWatcherService}定期调用，以便资源监测器可以检查资源
      */
     void checkAndNotify() throws IOException;
 }

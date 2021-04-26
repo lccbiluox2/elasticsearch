@@ -329,6 +329,8 @@ public class Node implements Closeable {
             /*
              * Create the environment based on the finalized view of the settings. This is to ensure that components get the same setting
              * values, no matter they ask for them from.
+             *
+             * 基于设置的最终视图创建环境。这是为了确保组件获得相同的设置值，无论它们从哪里请求它们。
              */
             this.environment = new Environment(settings, initialEnvironment.configFile(), Node.NODE_LOCAL_STORAGE_SETTING.get(settings));
             Environment.assertEquivalent(initialEnvironment, this.environment);
@@ -336,27 +338,38 @@ public class Node implements Closeable {
             logger.info("node name [{}], node ID [{}], cluster name [{}]",
                 NODE_NAME_SETTING.get(tmpSettings), nodeEnvironment.nodeId(), ClusterName.CLUSTER_NAME_SETTING.get(tmpSettings).value());
             resourcesToClose.add(nodeEnvironment);
+
             localNodeFactory = new LocalNodeFactory(settings, nodeEnvironment.nodeId());
 
             final List<ExecutorBuilder<?>> executorBuilders = pluginsService.getExecutorBuilders(settings);
 
+            logger.info("初始化ThreadPool");
             final ThreadPool threadPool = new ThreadPool(settings, executorBuilders.toArray(new ExecutorBuilder[0]));
             resourcesToClose.add(() -> ThreadPool.terminate(threadPool, 10, TimeUnit.SECONDS));
+
+            logger.info("初始化 ResourceWatcherService");
             final ResourceWatcherService resourceWatcherService = new ResourceWatcherService(settings, threadPool);
             resourcesToClose.add(resourceWatcherService);
             // adds the context to the DeprecationLogger so that it does not need to be injected everywhere
             DeprecationLogger.setThreadContext(threadPool.getThreadContext());
             resourcesToClose.add(() -> DeprecationLogger.removeThreadContext(threadPool.getThreadContext()));
 
+            // 这一步很耗时
             final List<Setting<?>> additionalSettings = new ArrayList<>(pluginsService.getPluginSettings());
             final List<String> additionalSettingsFilter = new ArrayList<>(pluginsService.getPluginSettingsFilter());
             for (final ExecutorBuilder<?> builder : threadPool.builders()) {
                 additionalSettings.addAll(builder.getRegisteredSettings());
             }
+
+            /** 创建 NodeClient*/
+            logger.info("创建 NodeClient 创建 Admin  ClusterAdmin 和 IndicesAdmin");
             client = new NodeClient(settings, threadPool);
 
+            logger.info("创建 ScriptModule ScriptService");
             final ScriptModule scriptModule = new ScriptModule(settings, pluginsService.filterPlugins(ScriptPlugin.class));
             final ScriptService scriptService = newScriptService(settings, scriptModule.engines, scriptModule.contexts);
+
+            logger.info("创建 AnalysisModule");
             AnalysisModule analysisModule = new AnalysisModule(this.environment, pluginsService.filterPlugins(AnalysisPlugin.class));
             // this is as early as we can validate settings at this point. we already pass them to ScriptModule as well as ThreadPool
             // so we might be late here already
@@ -367,23 +380,35 @@ public class Node implements Closeable {
                     .flatMap(List::stream)
                     .collect(Collectors.toSet());
 
+            logger.info("初始化 SettingsModule");
             final SettingsModule settingsModule =
                     new SettingsModule(settings, additionalSettings, additionalSettingsFilter, settingsUpgraders);
             scriptModule.registerClusterSettingsListeners(scriptService, settingsModule.getClusterSettings());
+
+            logger.info("初始化 NetworkService");
             final NetworkService networkService = new NetworkService(
                 getCustomNameResolvers(pluginsService.filterPlugins(DiscoveryPlugin.class)));
 
+            logger.info("初始化 ClusterService MasterService ClusterApplierService OperationRouting");
             List<ClusterPlugin> clusterPlugins = pluginsService.filterPlugins(ClusterPlugin.class);
             final ClusterService clusterService = new ClusterService(settings, settingsModule.getClusterSettings(), threadPool);
             clusterService.addStateApplier(scriptService);
             resourcesToClose.add(clusterService);
+
+            logger.info("初始化 ConsistentSettingsService");
             clusterService.addLocalNodeMasterListener(
                     new ConsistentSettingsService(settings, clusterService, settingsModule.getConsistentSettings())
                             .newHashPublisher());
+
+            logger.info("初始化 IngestService");
             final IngestService ingestService = new IngestService(clusterService, threadPool, this.environment,
                 scriptService, analysisModule.getAnalysisRegistry(),
                 pluginsService.filterPlugins(IngestPlugin.class), client);
+
+            logger.info("初始化 ClusterInfoService  InternalClusterInfoService");
             final ClusterInfoService clusterInfoService = newClusterInfoService(settings, clusterService, threadPool, client);
+
+            logger.info("初始化 UsageService  ");
             final UsageService usageService = new UsageService();
 
             ModulesBuilder modules = new ModulesBuilder();
@@ -391,19 +416,27 @@ public class Node implements Closeable {
             for (Module pluginModule : pluginsService.createGuiceModules()) {
                 modules.add(pluginModule);
             }
+
+            logger.info("初始化 MonitorService  ");
             final MonitorService monitorService = new MonitorService(settings, nodeEnvironment, threadPool, clusterInfoService);
             ClusterModule clusterModule = new ClusterModule(settings, clusterService, clusterPlugins, clusterInfoService);
             modules.add(clusterModule);
+
+            logger.info("初始化 IndicesModule MapperRegistry ");
             IndicesModule indicesModule = new IndicesModule(pluginsService.filterPlugins(MapperPlugin.class));
             modules.add(indicesModule);
 
+            logger.info("初始化 SearchModule  ");
             SearchModule searchModule = new SearchModule(settings, false, pluginsService.filterPlugins(SearchPlugin.class));
             CircuitBreakerService circuitBreakerService = createCircuitBreakerService(settingsModule.getSettings(),
                 settingsModule.getClusterSettings());
             resourcesToClose.add(circuitBreakerService);
+
+            logger.info("初始化 GatewayModule  ");
             modules.add(new GatewayModule());
 
 
+            logger.info("初始化 PageCacheRecycler  ");
             PageCacheRecycler pageCacheRecycler = createPageCacheRecycler(settings);
             BigArrays bigArrays = createBigArrays(pageCacheRecycler, circuitBreakerService);
             modules.add(settingsModule);
@@ -415,6 +448,8 @@ public class Node implements Closeable {
                     .flatMap(p -> p.getNamedWriteables().stream()),
                 ClusterModule.getNamedWriteables().stream())
                 .flatMap(Function.identity()).collect(Collectors.toList());
+
+            logger.info("初始化 NamedWriteableRegistry  ");
             final NamedWriteableRegistry namedWriteableRegistry = new NamedWriteableRegistry(namedWriteables);
             NamedXContentRegistry xContentRegistry = new NamedXContentRegistry(Stream.of(
                 NetworkModule.getNamedXContents().stream(),
@@ -424,6 +459,8 @@ public class Node implements Closeable {
                     .flatMap(p -> p.getNamedXContent().stream()),
                 ClusterModule.getNamedXWriteables().stream())
                 .flatMap(Function.identity()).collect(toList()));
+
+            logger.info("初始化 MetaStateService  ");
             final MetaStateService metaStateService = new MetaStateService(nodeEnvironment, xContentRegistry);
             final PersistedClusterStateService lucenePersistedStateFactory
                 = new PersistedClusterStateService(nodeEnvironment, xContentRegistry, bigArrays, clusterService.getClusterSettings(),
@@ -457,6 +494,7 @@ public class Node implements Closeable {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
 
+            logger.info("初始化 IndicesService  ");
             final IndicesService indicesService =
                 new IndicesService(settings, pluginsService, nodeEnvironment, xContentRegistry, analysisModule.getAnalysisRegistry(),
                     clusterModule.getIndexNameExpressionResolver(), indicesModule.getMapperRegistry(), namedWriteableRegistry,
@@ -464,8 +502,10 @@ public class Node implements Closeable {
                     clusterService, client, metaStateService, engineFactoryProviders, indexStoreFactories,
                     searchModule.getValuesSourceRegistry());
 
+            logger.info("初始化 AliasValidator  ");
             final AliasValidator aliasValidator = new AliasValidator();
 
+            logger.info("初始化 MetadataCreateIndexService  ");
             final MetadataCreateIndexService metadataCreateIndexService = new MetadataCreateIndexService(
                     settings,
                     clusterService,
@@ -487,12 +527,16 @@ public class Node implements Closeable {
                                                  repositoriesServiceReference::get).stream())
                 .collect(Collectors.toList());
 
+            logger.info("初始化 ActionModule  ");
             ActionModule actionModule = new ActionModule(false, settings, clusterModule.getIndexNameExpressionResolver(),
                 settingsModule.getIndexScopedSettings(), settingsModule.getClusterSettings(), settingsModule.getSettingsFilter(),
                 threadPool, pluginsService.filterPlugins(ActionPlugin.class), client, circuitBreakerService, usageService, clusterService);
             modules.add(actionModule);
 
+            logger.info("初始化 RestController  ");
             final RestController restController = actionModule.getRestController();
+
+            logger.info("初始化 NetworkModule  ");
             final NetworkModule networkModule = new NetworkModule(settings, false, pluginsService.filterPlugins(NetworkPlugin.class),
                 threadPool, bigArrays, pageCacheRecycler, circuitBreakerService, namedWriteableRegistry, xContentRegistry,
                 networkService, restController, clusterService.getClusterSettings());
@@ -500,53 +544,83 @@ public class Node implements Closeable {
                 pluginsService.filterPlugins(Plugin.class).stream()
                     .map(Plugin::getIndexTemplateMetadataUpgrader)
                     .collect(Collectors.toList());
+
+            logger.info("初始化 MetadataUpgrader  ");
             final MetadataUpgrader metadataUpgrader = new MetadataUpgrader(indexTemplateMetadataUpgraders);
+
+            logger.info("初始化 MetadataIndexUpgradeService  ");
             final MetadataIndexUpgradeService metadataIndexUpgradeService = new MetadataIndexUpgradeService(settings, xContentRegistry,
                 indicesModule.getMapperRegistry(), settingsModule.getIndexScopedSettings());
             new TemplateUpgradeService(client, clusterService, threadPool, indexTemplateMetadataUpgraders);
+
+            logger.info("初始化 Transport  ");
             final Transport transport = networkModule.getTransportSupplier().get();
             Set<String> taskHeaders = Stream.concat(
                 pluginsService.filterPlugins(ActionPlugin.class).stream().flatMap(p -> p.getTaskHeaders().stream()),
                 Stream.of(Task.X_OPAQUE_ID)
             ).collect(Collectors.toSet());
+
+            logger.info("初始化 TransportService  ");
             final TransportService transportService = newTransportService(settings, transport, threadPool,
                 networkModule.getTransportInterceptor(), localNodeFactory, settingsModule.getClusterSettings(), taskHeaders);
+
+            logger.info("初始化 GatewayMetaState  ");
             final GatewayMetaState gatewayMetaState = new GatewayMetaState();
+
+            logger.info("初始化 ResponseCollectorService  ");
             final ResponseCollectorService responseCollectorService = new ResponseCollectorService(clusterService);
+
+            logger.info("初始化 SearchTransportService  ");
             final SearchTransportService searchTransportService =  new SearchTransportService(transportService,
                 SearchExecutionStatsCollector.makeWrapper(responseCollectorService));
+
+            logger.info("初始化 HttpServerTransport  ");
             final HttpServerTransport httpServerTransport = newHttpTransport(networkModule);
 
 
+            logger.info("初始化 RepositoriesModule RepositoriesService  ");
             RepositoriesModule repositoriesModule = new RepositoriesModule(this.environment,
                 pluginsService.filterPlugins(RepositoryPlugin.class), transportService, clusterService, threadPool, xContentRegistry);
             RepositoriesService repositoryService = repositoriesModule.getRepositoryService();
             repositoriesServiceReference.set(repositoryService);
+
+            logger.info("初始化 SnapshotsService SnapshotShardsService  ");
             SnapshotsService snapshotsService = new SnapshotsService(settings, clusterService,
                 clusterModule.getIndexNameExpressionResolver(), repositoryService, threadPool);
             SnapshotShardsService snapshotShardsService = new SnapshotShardsService(settings, clusterService, repositoryService,
                 threadPool, transportService, indicesService, actionModule.getActionFilters(),
                 clusterModule.getIndexNameExpressionResolver());
+
+            logger.info("初始化 TransportNodesSnapshotsStatus RestoreService  ");
             TransportNodesSnapshotsStatus nodesSnapshotsStatus = new TransportNodesSnapshotsStatus(threadPool, clusterService,
                 transportService, snapshotShardsService, actionModule.getActionFilters());
             RestoreService restoreService = new RestoreService(clusterService, repositoryService, clusterModule.getAllocationService(),
                 metadataCreateIndexService, metadataIndexUpgradeService, clusterService.getClusterSettings());
 
+            logger.info("初始化 RerouteService   ");
             final RerouteService rerouteService
                 = new BatchedRerouteService(clusterService, clusterModule.getAllocationService()::reroute);
+
+            logger.info("初始化 DiskThresholdMonitor   ");
             final DiskThresholdMonitor diskThresholdMonitor = new DiskThresholdMonitor(settings, clusterService::state,
                 clusterService.getClusterSettings(), client, threadPool::relativeTimeInMillis, rerouteService);
             clusterInfoService.addListener(diskThresholdMonitor::onNewInfo);
 
+
+            logger.info("初始化 DiscoveryModule   ");
             final DiscoveryModule discoveryModule = new DiscoveryModule(settings, threadPool, transportService, namedWriteableRegistry,
                 networkService, clusterService.getMasterService(), clusterService.getClusterApplierService(),
                 clusterService.getClusterSettings(), pluginsService.filterPlugins(DiscoveryPlugin.class),
                 clusterModule.getAllocationService(), environment.configFile(), gatewayMetaState, rerouteService);
+
+            logger.info("初始化 NodeService   ");
             this.nodeService = new NodeService(settings, threadPool, monitorService, discoveryModule.getDiscovery(),
                 transportService, indicesService, pluginsService, circuitBreakerService, scriptService,
                 httpServerTransport, ingestService, clusterService, settingsModule.getSettingsFilter(), responseCollectorService,
                 searchTransportService);
 
+
+            logger.info("初始化 SearchService   ");
             final SearchService searchService = newSearchService(clusterService, indicesService,
                 threadPool, scriptService, bigArrays, searchModule.getFetchPhase(),
                 responseCollectorService, circuitBreakerService);
@@ -558,12 +632,16 @@ public class Node implements Closeable {
                 .flatMap(List::stream)
                 .collect(toList());
 
+            logger.info("初始化 PersistentTasksExecutorRegistry PersistentTasksClusterService  ");
             final PersistentTasksExecutorRegistry registry = new PersistentTasksExecutorRegistry(tasksExecutors);
             final PersistentTasksClusterService persistentTasksClusterService =
                 new PersistentTasksClusterService(settings, registry, clusterService, threadPool);
             resourcesToClose.add(persistentTasksClusterService);
+
+            logger.info("初始化 PersistentTasksService  ");
             final PersistentTasksService persistentTasksService = new PersistentTasksService(clusterService, threadPool, client);
 
+            logger.info("初始化 modules 绑定很多东西  ");
             modules.add(b -> {
                     b.bind(Node.class).toInstance(this);
                     b.bind(NodeService.class).toInstance(nodeService);

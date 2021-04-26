@@ -110,6 +110,8 @@ import static org.elasticsearch.cluster.metadata.IndexMetadata.SETTING_NUMBER_OF
 
 /**
  * Service responsible for submitting create index requests
+ *
+ * 负责提交创建索引请求的服务
  */
 public class MetadataCreateIndexService {
     private static final Logger logger = LogManager.getLogger(MetadataCreateIndexService.class);

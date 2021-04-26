@@ -195,7 +195,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         // now, find all the ones that are in plugins/
         if (pluginsDirectory != null) {
             try {
-                // TODO: remove this leniency, but tests bogusly rely on it
+                // TODO: remove this leniency, but tests bogusly rely on it 取消这种宽容，但测试虚假地依赖它
                 if (isAccessibleDirectory(pluginsDirectory, logger)) {
                     checkForFailedPluginRemovals(pluginsDirectory);
                     Set<Bundle> plugins = getPluginBundles(pluginsDirectory);
@@ -462,11 +462,13 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         LogManager.getLogger(PluginsService.class).trace("--- adding [{}] [{}]", type, plugin.toAbsolutePath());
         final PluginInfo info;
         try {
+            // 读取 plugin-descriptor.properties 配置文件中的信息
             info = PluginInfo.readFromProperties(plugin);
         } catch (final IOException e) {
             throw new IllegalStateException("Could not load plugin descriptor for " + type +
                 " directory [" + plugin.getFileName() + "]", e);
         }
+        logger.info("Bundle绑定插件：{}",info.getClassname());
         final Bundle bundle = new Bundle(info, plugin);
         if (bundles.add(bundle) == false) {
             throw new IllegalStateException("duplicate " + type + ": " + info);
@@ -535,6 +537,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         for (Bundle bundle : sortedBundles) {
             checkBundleJarHell(JarHell.parseClassPath(), bundle, transitiveUrls);
 
+            /** 加载插件实例 */
             final Plugin plugin = loadBundle(bundle, loaded);
             plugins.add(new Tuple<>(bundle.plugin, plugin));
         }
@@ -544,8 +547,15 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
 
     // jar-hell check the bundle against the parent classloader and extended plugins
     // the plugin cli does it, but we do it again, in case lusers mess with jar files manually
+    /**
+     * jar-hell会根据父类加载器和扩展插件来检查包，插件cli会这样做，但是我们会再做一次，以防lusers手动弄乱jar文件
+     * @param classpath
+     * @param bundle
+     * @param transitiveUrls
+     */
     static void checkBundleJarHell(Set<URL> classpath, Bundle bundle, Map<String, Set<URL>> transitiveUrls) {
         // invariant: any plugins this plugin bundle extends have already been added to transitiveUrls
+        // 这个插件包扩展的任何插件都已经添加到transitiveUrls中了
         List<String> exts = bundle.plugin.getExtendedPlugins();
 
         try {
@@ -570,6 +580,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
                 }
 
                 urls.addAll(pluginUrls);
+                // 检查jarhell，我们添加每个扩展插件的url
                 JarHell.checkJarHell(urls, logger::debug); // check jarhell as we add each extended plugin's urls
             }
 
@@ -595,6 +606,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
     private Plugin loadBundle(Bundle bundle, Map<String, Plugin> loaded) {
         String name = bundle.plugin.getName();
 
+        // 校验jar的信息
         verifyCompatibility(bundle.plugin);
 
         // collect loaders of extended plugins
@@ -619,6 +631,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
             ExtensiblePlugin.class.cast(loaded.get(extendedPluginName)).reloadSPI(loader);
         }
 
+        logger.info("获取parentLoader 并且加载loader  loadPluginClass实例化pluginClass  ");
         Class<? extends Plugin> pluginClass = loadPluginClass(bundle.plugin.getClassname(), loader);
         Plugin plugin = loadPlugin(pluginClass, settings, configPath);
         loaded.put(name, plugin);
@@ -629,6 +642,8 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
      * Reloads all Lucene SPI implementations using the new classloader.
      * This method must be called after the new classloader has been created to
      * register the services for use.
+     *
+     * 使用新的类加载器重新加载所有Lucene SPI实现。必须在创建新的类加载器后调用此方法，以注册要使用的服务。
      */
     static void reloadLuceneSPI(ClassLoader loader) {
         // do NOT change the order of these method calls!
@@ -669,6 +684,7 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         final Class[] parameterTypes = constructor.getParameterTypes();
         try {
             if (constructor.getParameterCount() == 2 && parameterTypes[0] == Settings.class && parameterTypes[1] == Path.class) {
+                logger.info("插件的参数总数为2，调用newInstance构建插件实例");
                 return (Plugin) constructor.newInstance(settings, configPath);
             } else if (constructor.getParameterCount() == 1 && parameterTypes[0] == Settings.class) {
                 return (Plugin) constructor.newInstance(settings);

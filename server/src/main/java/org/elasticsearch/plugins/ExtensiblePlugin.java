@@ -29,6 +29,8 @@ public interface ExtensiblePlugin {
 
     /**
      * Reload any SPI implementations from the given classloader.
+     *
+     * 从给定的类加载器中重新加载任何SPI实现
      */
     default void reloadSPI(ClassLoader loader) {}
 }
