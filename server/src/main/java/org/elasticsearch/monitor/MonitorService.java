@@ -42,10 +42,15 @@ public class MonitorService extends AbstractLifecycleComponent {
 
     public MonitorService(Settings settings, NodeEnvironment nodeEnvironment, ThreadPool threadPool,
                           ClusterInfoService clusterInfoService) throws IOException {
+        // jvm gc 监控服务
         this.jvmGcMonitorService = new JvmGcMonitorService(settings, threadPool);
+        // 操作系统监控服务
         this.osService = new OsService(settings);
+        // 处理线程服务
         this.processService = new ProcessService(settings);
+        // jvm 相关服务
         this.jvmService = new JvmService(settings);
+        // 文件相关服务
         this.fsService = new FsService(settings, nodeEnvironment, clusterInfoService);
     }
 

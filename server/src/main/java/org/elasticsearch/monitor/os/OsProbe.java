@@ -249,6 +249,7 @@ public class OsProbe {
      * @throws IOException if an I/O exception occurs reading {@code /proc/self/cgroup}
      */
     private Map<String, String> getControlGroups() throws IOException {
+        // 这里是读取配置文件 "/proc/self/cgroup"
         final List<String> lines = readProcSelfCgroup();
         final Map<String, String> controllerMap = new HashMap<>();
         for (final String line : lines) {
@@ -522,6 +523,7 @@ public class OsProbe {
             if (!areCgroupStatsAvailable()) {
                 return null;
             } else {
+                // 这里是读取配置文件 "/proc/self/cgroup"，然后解析成map
                 final Map<String, String> controllerMap = getControlGroups();
                 assert !controllerMap.isEmpty();
 
@@ -530,6 +532,7 @@ public class OsProbe {
                     logger.debug("no [cpuacct] data found in cgroup stats");
                     return null;
                 }
+                // 这个是读取 /sys/fs/cgroup/cpuacct
                 final long cgroupCpuAcctUsageNanos = getCgroupCpuAcctUsageNanos(cpuAcctControlGroup);
 
                 final String cpuControlGroup = controllerMap.get("cpu");
@@ -537,6 +540,7 @@ public class OsProbe {
                     logger.debug("no [cpu] data found in cgroup stats");
                     return null;
                 }
+                // 读取 /sys/fs/cgroup/cpu
                 final long cgroupCpuAcctCpuCfsPeriodMicros = getCgroupCpuAcctCpuCfsPeriodMicros(cpuControlGroup);
                 final long cgroupCpuAcctCpuCfsQuotaMicros = getCgroupCpuAcctCpuCfsQuotaMicros(cpuControlGroup);
                 final OsStats.Cgroup.CpuStat cpuStat = getCgroupCpuAcctCpuStat(cpuControlGroup);
@@ -546,6 +550,7 @@ public class OsProbe {
                     logger.debug("no [memory] data found in cgroup stats");
                     return null;
                 }
+                // 读取 /sys/fs/cgroup/memory
                 final String cgroupMemoryLimitInBytes = getCgroupMemoryLimitInBytes(memoryControlGroup);
                 final String cgroupMemoryUsageInBytes = getCgroupMemoryUsageInBytes(memoryControlGroup);
 
@@ -653,9 +658,13 @@ public class OsProbe {
     }
 
     public OsStats osStats() {
+        // 获取cpu信息
         final OsStats.Cpu cpu = new OsStats.Cpu(getSystemCpuPercent(), getSystemLoadAverage());
+        // 获取内存信息
         final OsStats.Mem mem = new OsStats.Mem(getTotalPhysicalMemorySize(), getFreePhysicalMemorySize());
+        // 获取Swap 信息
         final OsStats.Swap swap = new OsStats.Swap(getTotalSwapSpaceSize(), getFreeSwapSpaceSize());
+        // 获取 getCgroup 信息
         final OsStats.Cgroup cgroup = Constants.LINUX ? getCgroup() : null;
         return new OsStats(System.currentTimeMillis(), cpu, mem, swap, cgroup);
     }

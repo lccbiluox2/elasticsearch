@@ -44,7 +44,9 @@ public class OsService implements ReportingService<OsInfo> {
                 Property.NodeScope);
 
     public OsService(Settings settings) throws IOException {
+        // 获取 OsProbe 实例
         this.probe = OsProbe.getInstance();
+        // 获取刷新时间
         TimeValue refreshInterval = REFRESH_INTERVAL_SETTING.get(settings);
         this.info = probe.osInfo(refreshInterval.millis(), EsExecutors.allocatedProcessors(settings));
         this.osStatsCache = new OsStatsCache(refreshInterval, probe.osStats());

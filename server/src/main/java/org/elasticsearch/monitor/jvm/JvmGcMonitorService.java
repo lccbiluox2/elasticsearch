@@ -109,7 +109,9 @@ public class JvmGcMonitorService extends AbstractLifecycleComponent {
     public JvmGcMonitorService(Settings settings, ThreadPool threadPool) {
         this.threadPool = threadPool;
 
+        // 是否启动了 jvm监控 monitor.jvm.gc.enabled
         this.enabled = ENABLED_SETTING.get(settings);
+        // 默认是1秒监控一下
         this.interval = REFRESH_INTERVAL_SETTING.get(settings);
 
         Map<String, GcThreshold> gcThresholds = new HashMap<>();
@@ -121,8 +123,11 @@ public class JvmGcMonitorService extends AbstractLifecycleComponent {
             TimeValue debug = getValidThreshold(entry.getValue(), entry.getKey(), "debug");
             gcThresholds.put(name, new GcThreshold(name, warn.millis(), info.millis(), debug.millis()));
         }
+        // 年轻代的监控
         gcThresholds.putIfAbsent(GcNames.YOUNG, new GcThreshold(GcNames.YOUNG, 1000, 700, 400));
+        // 老年代的监控
         gcThresholds.putIfAbsent(GcNames.OLD, new GcThreshold(GcNames.OLD, 10000, 5000, 2000));
+        // 默认的监控
         gcThresholds.putIfAbsent("default", new GcThreshold("default", 10000, 5000, 2000));
         this.gcThresholds = unmodifiableMap(gcThresholds);
 
