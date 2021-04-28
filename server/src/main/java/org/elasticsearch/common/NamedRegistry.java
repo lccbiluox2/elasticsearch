@@ -28,6 +28,8 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * A registry from String to some class implementation. Used to ensure implementations are registered only once.
+ *
+ * 从String到某些类实现的注册表。用于确保实现只注册一次。
  */
 public class NamedRegistry<T> {
     private final Map<String, T> registry = new HashMap<>();

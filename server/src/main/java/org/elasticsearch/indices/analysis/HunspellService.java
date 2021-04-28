@@ -94,8 +94,8 @@ public class HunspellService {
     public HunspellService(final Settings settings, final Environment env, final Map<String, Dictionary> knownDictionaries)
             throws IOException {
         this.knownDictionaries = Collections.unmodifiableMap(knownDictionaries);
-        this.hunspellDir = resolveHunspellDirectory(env);
-        this.defaultIgnoreCase = HUNSPELL_IGNORE_CASE.get(settings);
+        this.hunspellDir = resolveHunspellDirectory(env);// /Users/lcc/IdeaProjects/source_code/elasticsearch/config/hunspell
+        this.defaultIgnoreCase = HUNSPELL_IGNORE_CASE.get(settings);// 是否忽略大小写
         this.loadingFunction = (locale) -> {
             try {
                 return loadDictionary(locale, settings, env);
@@ -103,7 +103,7 @@ public class HunspellService {
                 throw new IllegalStateException("failed to load hunspell dictionary for locale: " + locale, e);
             }
         };
-        if (!HUNSPELL_LAZY_LOAD.get(settings)) {
+        if (!HUNSPELL_LAZY_LOAD.get(settings)) {// 是否懒加载
             scanAndLoadDictionaries();
         }
 
@@ -154,6 +154,8 @@ public class HunspellService {
 
     /**
      * Loads the hunspell dictionary for the given local.
+     *
+     * 加载给定本地的hunspell字典。
      *
      * @param locale       The locale of the hunspell dictionary to be loaded.
      * @param nodeSettings The node level settings
