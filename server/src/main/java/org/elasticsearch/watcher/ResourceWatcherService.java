@@ -105,8 +105,10 @@ public class ResourceWatcherService implements Closeable {
 
         logger.info("初始化 5秒 30秒 60秒的 ResourceMonitor");
         if (enabled) {
-            lowFuture = threadPool.scheduleWithFixedDelay(lowMonitor, lowMonitor.interval, Names.SAME);
-            mediumFuture = threadPool.scheduleWithFixedDelay(mediumMonitor, mediumMonitor.interval, Names.SAME);
+            lowFuture = null;
+            mediumFuture = null;
+//            lowFuture = threadPool.scheduleWithFixedDelay(lowMonitor, lowMonitor.interval, Names.SAME);
+//            mediumFuture = threadPool.scheduleWithFixedDelay(mediumMonitor, mediumMonitor.interval, Names.SAME);
             highFuture = threadPool.scheduleWithFixedDelay(highMonitor, highMonitor.interval, Names.SAME);
         } else {
             lowFuture = null;

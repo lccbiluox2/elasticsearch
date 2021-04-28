@@ -19,6 +19,8 @@
 
 package org.elasticsearch.test.transport;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.cluster.node.DiscoveryNode;
@@ -26,6 +28,7 @@ import org.elasticsearch.common.component.Lifecycle;
 import org.elasticsearch.common.component.LifecycleListener;
 import org.elasticsearch.common.transport.BoundTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.repositories.FilterRepository;
 import org.elasticsearch.tasks.Task;
 import org.elasticsearch.transport.ConnectionProfile;
 import org.elasticsearch.transport.RequestHandlerRegistry;
@@ -45,6 +48,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StubbableTransport implements Transport {
+
+    private final Logger logger = LogManager.getLogger(StubbableTransport.class);
 
     private final ConcurrentHashMap<TransportAddress, SendRequestBehavior> sendBehaviors = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<TransportAddress, OpenConnectionBehavior> connectBehaviors = new ConcurrentHashMap<>();
@@ -193,6 +198,7 @@ public class StubbableTransport implements Transport {
 
     @Override
     public void start() {
+        logger.info("启动生命周期：Transport");
         delegate.start();
     }
 

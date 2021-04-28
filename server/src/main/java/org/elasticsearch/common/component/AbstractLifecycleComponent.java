@@ -19,12 +19,18 @@
 
 package org.elasticsearch.common.component;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.elasticsearch.node.Node;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class AbstractLifecycleComponent implements LifecycleComponent {
+
+    private final Logger logger = LogManager.getLogger(AbstractLifecycleComponent .class);
 
     protected final Lifecycle lifecycle = new Lifecycle();
 
@@ -49,6 +55,7 @@ public abstract class AbstractLifecycleComponent implements LifecycleComponent {
 
     @Override
     public void start() {
+        logger.info("启动生命周期：AbstractLifecycleComponent");
         synchronized (lifecycle) {
             if (!lifecycle.canMoveToStarted()) {
                 return;

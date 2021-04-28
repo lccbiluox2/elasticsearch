@@ -167,9 +167,13 @@ public class ThreadPool implements ReportingService<ThreadPoolInfo>, Scheduler {
         assert Node.NODE_NAME_SETTING.exists(settings);
 
         final Map<String, ExecutorBuilder> builders = new HashMap<>();
+        // 获得处理器CPU的数量，
         final int allocatedProcessors = EsExecutors.allocatedProcessors(settings);
+        // 这个变量的意思是availableProcessors的一半，但最大不超过5。
         final int halfProcMaxAt5 = halfAllocatedProcessorsMaxFive(allocatedProcessors);
+        // 这个变量的意思是availableProcessors的一半，但最大不超过10。
         final int halfProcMaxAt10 = halfAllocatedProcessorsMaxTen(allocatedProcessors);
+        // ElasticSearch中是确定为：可用CPU处理器数量的4倍，且固定范围为最小128，最大为512。
         final int genericThreadPoolMax = boundedBy(4 * allocatedProcessors, 128, 512);
         builders.put(Names.GENERIC, new ScalingExecutorBuilder(Names.GENERIC, 4, genericThreadPoolMax, TimeValue.timeValueSeconds(30)));
         builders.put(Names.WRITE, new FixedExecutorBuilder(settings, Names.WRITE, allocatedProcessors, 200));

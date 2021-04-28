@@ -313,6 +313,7 @@ public class Node implements Closeable {
                     initialEnvironment.logsFile(), initialEnvironment.pluginsFile());
             }
 
+            // 插件service
             this.pluginsService = new PluginsService(tmpSettings, initialEnvironment.configFile(), initialEnvironment.modulesFile(),
                 initialEnvironment.pluginsFile(), classpathPlugins);
             final Settings settings = pluginsService.updatedSettings();
@@ -351,6 +352,7 @@ public class Node implements Closeable {
             final ResourceWatcherService resourceWatcherService = new ResourceWatcherService(settings, threadPool);
             resourcesToClose.add(resourceWatcherService);
             // adds the context to the DeprecationLogger so that it does not need to be injected everywhere
+            // 向DeprecationLogger添加上下文，这样它就不需要到处注入
             DeprecationLogger.setThreadContext(threadPool.getThreadContext());
             resourcesToClose.add(() -> DeprecationLogger.removeThreadContext(threadPool.getThreadContext()));
 
@@ -381,6 +383,7 @@ public class Node implements Closeable {
                     .collect(Collectors.toSet());
 
             logger.info("初始化 SettingsModule");
+            // 配置模块，维护了es的各种配置信息。
             final SettingsModule settingsModule =
                     new SettingsModule(settings, additionalSettings, additionalSettingsFilter, settingsUpgraders);
             scriptModule.registerClusterSettingsListeners(scriptService, settingsModule.getClusterSettings());
@@ -784,6 +787,7 @@ public class Node implements Closeable {
         }
 
         logger.info("starting ...");
+        logger.info("循环启动所有生命周期相关的组件");
         pluginLifecycleComponents.forEach(LifecycleComponent::start);
 
         //1、利用Guice获取上述注册的各种模块以及服务
@@ -797,27 +801,32 @@ public class Node implements Closeable {
         injector.getInstance(RepositoriesService.class).start();
         injector.getInstance(SearchService.class).start();
         nodeService.getMonitorService().start();
+        logger.info("启动组件 MappingUpdatedAction IndicesService IndicesClusterStateService SnapshotsService SnapshotShardsService RepositoriesService SearchService");
 
         final ClusterService clusterService = injector.getInstance(ClusterService.class);
 
         final NodeConnectionsService nodeConnectionsService = injector.getInstance(NodeConnectionsService.class);
         nodeConnectionsService.start();
         clusterService.setNodeConnectionsService(nodeConnectionsService);
+        logger.info("启动组件 NodeConnectionsService");
 
         injector.getInstance(GatewayService.class).start();
         Discovery discovery = injector.getInstance(Discovery.class);
         clusterService.getMasterService().setClusterStatePublisher(discovery::publish);
+        logger.info("启动组件 Discovery");
 
         // Start the transport service now so the publish address will be added to the local disco node in ClusterService
         TransportService transportService = injector.getInstance(TransportService.class);
         transportService.getTaskManager().setTaskResultsService(injector.getInstance(TaskResultsService.class));
         transportService.start();
+        logger.info("启动组件 TransportService");
         assert localNodeFactory.getNode() != null;
         assert transportService.getLocalNode().equals(localNodeFactory.getNode())
             : "transportService has a different local node than the factory provided";
         injector.getInstance(PeerRecoverySourceService.class).start();
 
         // Load (and maybe upgrade) the metadata stored on disk
+        logger.info("启动组件 GatewayMetaState");
         final GatewayMetaState gatewayMetaState = injector.getInstance(GatewayMetaState.class);
         gatewayMetaState.start(settings(), transportService, clusterService, injector.getInstance(MetaStateService.class),
             injector.getInstance(MetadataIndexUpgradeService.class), injector.getInstance(MetadataUpgrader.class),
@@ -844,6 +853,7 @@ public class Node implements Closeable {
         validateNodeBeforeAcceptingRequests(new BootstrapContext(environment, onDiskMetadata), transportService.boundAddress(),
             pluginsService.filterPlugins(Plugin.class).stream()
                 .flatMap(p -> p.getBootstrapChecks().stream()).collect(Collectors.toList()));
+
 
         //2、将当前节点加入到一个集群簇中去,并启动当前节点
         clusterService.addStateApplier(transportService.getTaskManager());

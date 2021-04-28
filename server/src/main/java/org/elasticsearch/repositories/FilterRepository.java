@@ -18,6 +18,8 @@
  */
 package org.elasticsearch.repositories;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.index.IndexCommit;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionListener;
@@ -28,6 +30,7 @@ import org.elasticsearch.cluster.metadata.Metadata;
 import org.elasticsearch.cluster.metadata.RepositoryMetadata;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.collect.Tuple;
+import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.component.Lifecycle;
 import org.elasticsearch.common.component.LifecycleListener;
 import org.elasticsearch.index.mapper.MapperService;
@@ -47,6 +50,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FilterRepository implements Repository {
+
+    private final Logger logger = LogManager.getLogger(FilterRepository.class);
 
     private final Repository in;
 
@@ -176,6 +181,7 @@ public class FilterRepository implements Repository {
 
     @Override
     public void start() {
+        logger.info("启动生命周期：Repository");
         in.start();
     }
 
