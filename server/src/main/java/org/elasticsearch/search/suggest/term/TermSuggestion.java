@@ -41,6 +41,8 @@ import static org.elasticsearch.common.xcontent.ConstructingObjectParser.constru
 
 /**
  * The suggestion responses corresponding with the suggestions in the request.
+ *
+ * 建议响应与请求中的建议相对应
  */
 public class TermSuggestion extends Suggestion<TermSuggestion.Entry> {
 

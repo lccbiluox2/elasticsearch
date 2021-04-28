@@ -321,20 +321,35 @@ public class SearchModule {
     public SearchModule(Settings settings, boolean transportClient, List<SearchPlugin> plugins) {
         this.settings = settings;
         this.transportClient = transportClient;
+        // 注册term查询、phrase 查询、completion 查询、注册所有插件的查询
         registerSuggesters(plugins);
+        // 注册高亮插件，默认3个fvh、plain、unified 以及所有带高亮的插件
         highlighters = setupHighlighters(settings, plugins);
+        // 注册计算得分的函数
         registerScoreFunctions(plugins);
+        // 注册查询解析器
         registerQueryParsers(plugins);
+        // 注册query
         registerRescorers(plugins);
+        // 注册排序器
         registerSorts();
+        // 注册值格式化
         registerValueFormats();
+        // TODO: 这个不知道啥玩意
         registerSignificanceHeuristics(plugins);
+        // 注册聚合操作
         this.valuesSourceRegistry = registerAggregations(plugins);
+        // TODO: 这个不知道啥玩意
         registerMovingAverageModels(plugins);
+        // TODO: 这个不知道啥玩意
         registerPipelineAggregations(plugins);
+        // TODO: 这个不知道啥玩意
         registerFetchSubPhases(plugins);
+        // 从插件中注册
         registerSearchExts(plugins);
+        // TODO: 这个不知道啥玩意
         registerShapes();
+        // TODO: 这个不知道啥玩意
         registerIntervalsSourceProviders();
         namedWriteables.addAll(SortValue.namedWriteables());
     }
@@ -367,32 +382,50 @@ public class SearchModule {
 
     private ValuesSourceRegistry registerAggregations(List<SearchPlugin> plugins) {
         ValuesSourceRegistry.Builder builder = new ValuesSourceRegistry.Builder();
+
+        // 平均值
         registerAggregation(new AggregationSpec(AvgAggregationBuilder.NAME, AvgAggregationBuilder::new, AvgAggregationBuilder.PARSER)
             .addResultReader(InternalAvg::new)
             .setAggregatorRegistrar(AvgAggregationBuilder::registerAggregators), builder);
+
+        // weighted_avg 权重平均值
         registerAggregation(new AggregationSpec(WeightedAvgAggregationBuilder.NAME, WeightedAvgAggregationBuilder::new,
             WeightedAvgAggregationBuilder.PARSER).addResultReader(InternalWeightedAvg::new)
             .setAggregatorRegistrar(WeightedAvgAggregationBuilder::registerUsage), builder);
+
+        // sum 求和
         registerAggregation(new AggregationSpec(SumAggregationBuilder.NAME, SumAggregationBuilder::new, SumAggregationBuilder.PARSER)
             .addResultReader(InternalSum::new)
             .setAggregatorRegistrar(SumAggregationBuilder::registerAggregators), builder);
+
+        // 最小值
         registerAggregation(new AggregationSpec(MinAggregationBuilder.NAME, MinAggregationBuilder::new, MinAggregationBuilder.PARSER)
                 .addResultReader(InternalMin::new)
                 .setAggregatorRegistrar(MinAggregationBuilder::registerAggregators), builder);
+
+        // 最大值
         registerAggregation(new AggregationSpec(MaxAggregationBuilder.NAME, MaxAggregationBuilder::new, MaxAggregationBuilder.PARSER)
                 .addResultReader(InternalMax::new)
                 .setAggregatorRegistrar(MaxAggregationBuilder::registerAggregators), builder);
+
+        // stats TODO: 这是什么
         registerAggregation(new AggregationSpec(StatsAggregationBuilder.NAME, StatsAggregationBuilder::new, StatsAggregationBuilder.PARSER)
             .addResultReader(InternalStats::new)
             .setAggregatorRegistrar(StatsAggregationBuilder::registerAggregators), builder);
+
+        // extended_stats TODO: 这是什么
         registerAggregation(new AggregationSpec(ExtendedStatsAggregationBuilder.NAME, ExtendedStatsAggregationBuilder::new,
             ExtendedStatsAggregationBuilder.PARSER)
                 .addResultReader(InternalExtendedStats::new)
                 .setAggregatorRegistrar(ExtendedStatsAggregationBuilder::registerAggregators), builder);
+
+        // value_count
         registerAggregation(new AggregationSpec(ValueCountAggregationBuilder.NAME, ValueCountAggregationBuilder::new,
                 ValueCountAggregationBuilder.PARSER)
                     .addResultReader(InternalValueCount::new)
                     .setAggregatorRegistrar(ValueCountAggregationBuilder::registerAggregators), builder);
+
+        // 百分比
         registerAggregation(new AggregationSpec(PercentilesAggregationBuilder.NAME, PercentilesAggregationBuilder::new,
                 PercentilesAggregationBuilder::parse)
                     .addResultReader(InternalTDigestPercentiles.NAME, InternalTDigestPercentiles::new)
@@ -654,7 +687,10 @@ public class SearchModule {
     }
 
     private void registerRescorers(List<SearchPlugin> plugins) {
+        //  注册query
         registerRescorer(new RescorerSpec<>(QueryRescorerBuilder.NAME, QueryRescorerBuilder::new, QueryRescorerBuilder::fromXContent));
+
+        // 从插件中注册 Rescorer
         registerFromPlugin(plugins, SearchPlugin::getRescorers, this::registerRescorer);
     }
 
@@ -666,9 +702,13 @@ public class SearchModule {
     }
 
     private void registerSorts() {
+        // 注册 _geo_distance 排序器
         namedWriteables.add(new NamedWriteableRegistry.Entry(SortBuilder.class, GeoDistanceSortBuilder.NAME, GeoDistanceSortBuilder::new));
+        // 注册 _score  排序器
         namedWriteables.add(new NamedWriteableRegistry.Entry(SortBuilder.class, ScoreSortBuilder.NAME, ScoreSortBuilder::new));
+        // 注册 _script  排序器
         namedWriteables.add(new NamedWriteableRegistry.Entry(SortBuilder.class, ScriptSortBuilder.NAME, ScriptSortBuilder::new));
+        // 注册 field_sort  排序器
         namedWriteables.add(new NamedWriteableRegistry.Entry(SortBuilder.class, FieldSortBuilder.NAME, FieldSortBuilder::new));
     }
 
@@ -687,17 +727,17 @@ public class SearchModule {
     }
 
     private void registerSuggesters(List<SearchPlugin> plugins) {
-        registerSmoothingModels(namedWriteables);
-
+        registerSmoothingModels(namedWriteables);// TODO: 不知道注册了什么
+        // 注册term查询
         registerSuggester(new SuggesterSpec<>(TermSuggestionBuilder.SUGGESTION_NAME,
             TermSuggestionBuilder::new, TermSuggestionBuilder::fromXContent, TermSuggestion::new));
-
+        // 注册 phrase 查询
         registerSuggester(new SuggesterSpec<>(PhraseSuggestionBuilder.SUGGESTION_NAME,
             PhraseSuggestionBuilder::new, PhraseSuggestionBuilder::fromXContent, PhraseSuggestion::new));
-
+        // 注册 completion 查询
         registerSuggester(new SuggesterSpec<>(CompletionSuggestionBuilder.SUGGESTION_NAME,
             CompletionSuggestionBuilder::new, CompletionSuggestionBuilder::fromXContent, CompletionSuggestion::new));
-
+        // 注册所有插件的查询
         registerFromPlugin(plugins, SearchPlugin::getSuggesters, this::registerSuggester);
     }
 
@@ -724,26 +764,41 @@ public class SearchModule {
 
     private void registerScoreFunctions(List<SearchPlugin> plugins) {
         // ScriptScoreFunctionBuilder has it own named writable because of a new script_score query
+        // 注册 使用脚本计算或影响与内部查询或过滤器匹配的文档得分的函数。
         namedWriteables.add(new NamedWriteableRegistry.Entry(
             ScriptScoreFunctionBuilder.class, ScriptScoreFunctionBuilder.NAME,  ScriptScoreFunctionBuilder::new));
+
         registerScoreFunction(new ScoreFunctionSpec<>(ScriptScoreFunctionBuilder.NAME, ScriptScoreFunctionBuilder::new,
                 ScriptScoreFunctionBuilder::fromXContent));
 
+        // 注册 gauss TODO: 这个不知道是啥
         registerScoreFunction(
                 new ScoreFunctionSpec<>(GaussDecayFunctionBuilder.NAME, GaussDecayFunctionBuilder::new, GaussDecayFunctionBuilder.PARSER));
+
+        // 注册 linear TODO: 这个不知道是啥
         registerScoreFunction(new ScoreFunctionSpec<>(LinearDecayFunctionBuilder.NAME, LinearDecayFunctionBuilder::new,
                 LinearDecayFunctionBuilder.PARSER));
+
+        // 注册 exp TODO: 这个不知道是啥
         registerScoreFunction(new ScoreFunctionSpec<>(ExponentialDecayFunctionBuilder.NAME, ExponentialDecayFunctionBuilder::new,
                 ExponentialDecayFunctionBuilder.PARSER));
+
+        // 注册 random_score 随机分数
         registerScoreFunction(new ScoreFunctionSpec<>(RandomScoreFunctionBuilder.NAME, RandomScoreFunctionBuilder::new,
                 RandomScoreFunctionBuilder::fromXContent));
+
+        // 注册 field_value_factor 随机分数
         registerScoreFunction(new ScoreFunctionSpec<>(FieldValueFactorFunctionBuilder.NAME, FieldValueFactorFunctionBuilder::new,
                 FieldValueFactorFunctionBuilder::fromXContent));
 
         //weight doesn't have its own parser, so every function supports it out of the box.
         //Can be a single function too when not associated to any other function, which is why it needs to be registered manually here.
+        // Weight没有自己的解析器，所以每个函数都支持它。当不与任何其他函数关联时，也可以是一个单独的函数，这就是为什么它
+        // 需要在这里手动注册。
+        // 将权重与得分相乘的查询。
         namedWriteables.add(new NamedWriteableRegistry.Entry(ScoreFunctionBuilder.class, WeightBuilder.NAME, WeightBuilder::new));
 
+        // 注册从插件中影响分数的插件
         registerFromPlugin(plugins, SearchPlugin::getScoreFunctions, this::registerScoreFunction);
     }
 
@@ -757,13 +812,22 @@ public class SearchModule {
     }
 
     private void registerValueFormats() {
+        // boolean格式化
         registerValueFormat(DocValueFormat.BOOLEAN.getWriteableName(), in -> DocValueFormat.BOOLEAN);
+        // 时间 格式化
         registerValueFormat(DocValueFormat.DateTime.NAME, DocValueFormat.DateTime::new);
         registerValueFormat(DocValueFormat.Decimal.NAME, DocValueFormat.Decimal::new);
+
+        // TODO: 不知道什么 格式化
         registerValueFormat(DocValueFormat.GEOHASH.getWriteableName(), in -> DocValueFormat.GEOHASH);
         registerValueFormat(DocValueFormat.GEOTILE.getWriteableName(), in -> DocValueFormat.GEOTILE);
+
+        // ip 格式化
         registerValueFormat(DocValueFormat.IP.getWriteableName(), in -> DocValueFormat.IP);
+        // raw 格式化
         registerValueFormat(DocValueFormat.RAW.getWriteableName(), in -> DocValueFormat.RAW);
+
+        // 二进制格式化
         registerValueFormat(DocValueFormat.BINARY.getWriteableName(), in -> DocValueFormat.BINARY);
     }
 
@@ -842,70 +906,122 @@ public class SearchModule {
     }
 
     private void registerQueryParsers(List<SearchPlugin> plugins) {
+        // match 查询解析器
         registerQuery(new QuerySpec<>(MatchQueryBuilder.NAME, MatchQueryBuilder::new, MatchQueryBuilder::fromXContent));
+        // match_phrase  查询解析器
         registerQuery(new QuerySpec<>(MatchPhraseQueryBuilder.NAME, MatchPhraseQueryBuilder::new, MatchPhraseQueryBuilder::fromXContent));
+        // match_phrase_prefix  查询解析器
         registerQuery(new QuerySpec<>(MatchPhrasePrefixQueryBuilder.NAME, MatchPhrasePrefixQueryBuilder::new,
                 MatchPhrasePrefixQueryBuilder::fromXContent));
+        // multi_match  查询解析器
         registerQuery(new QuerySpec<>(MultiMatchQueryBuilder.NAME, MultiMatchQueryBuilder::new, MultiMatchQueryBuilder::fromXContent));
+        // nested  查询解析器
         registerQuery(new QuerySpec<>(NestedQueryBuilder.NAME, NestedQueryBuilder::new, NestedQueryBuilder::fromXContent));
+        // dis_max  查询解析器
         registerQuery(new QuerySpec<>(DisMaxQueryBuilder.NAME, DisMaxQueryBuilder::new, DisMaxQueryBuilder::fromXContent));
+        // ids  查询解析器
         registerQuery(new QuerySpec<>(IdsQueryBuilder.NAME, IdsQueryBuilder::new, IdsQueryBuilder::fromXContent));
+        // match_all  查询解析器
         registerQuery(new QuerySpec<>(MatchAllQueryBuilder.NAME, MatchAllQueryBuilder::new, MatchAllQueryBuilder::fromXContent));
+        // query_string  查询解析器
         registerQuery(new QuerySpec<>(QueryStringQueryBuilder.NAME, QueryStringQueryBuilder::new, QueryStringQueryBuilder::fromXContent));
+        // boosting  查询解析器
         registerQuery(new QuerySpec<>(BoostingQueryBuilder.NAME, BoostingQueryBuilder::new, BoostingQueryBuilder::fromXContent));
+
+
         BooleanQuery.setMaxClauseCount(INDICES_MAX_CLAUSE_COUNT_SETTING.get(settings));
+
+
+        // bool  查询解析器
         registerQuery(new QuerySpec<>(BoolQueryBuilder.NAME, BoolQueryBuilder::new, BoolQueryBuilder::fromXContent));
+        // term  查询解析器
         registerQuery(new QuerySpec<>(TermQueryBuilder.NAME, TermQueryBuilder::new, TermQueryBuilder::fromXContent));
+        // terms  查询解析器
         registerQuery(new QuerySpec<>(TermsQueryBuilder.NAME, TermsQueryBuilder::new, TermsQueryBuilder::fromXContent));
+        // fuzzy  查询解析器
         registerQuery(new QuerySpec<>(FuzzyQueryBuilder.NAME, FuzzyQueryBuilder::new, FuzzyQueryBuilder::fromXContent));
+        // regexp  查询解析器
         registerQuery(new QuerySpec<>(RegexpQueryBuilder.NAME, RegexpQueryBuilder::new, RegexpQueryBuilder::fromXContent));
+        // range  查询解析器
         registerQuery(new QuerySpec<>(RangeQueryBuilder.NAME, RangeQueryBuilder::new, RangeQueryBuilder::fromXContent));
+        // prefix  查询解析器
         registerQuery(new QuerySpec<>(PrefixQueryBuilder.NAME, PrefixQueryBuilder::new, PrefixQueryBuilder::fromXContent));
+        // wildcard  查询解析器
         registerQuery(new QuerySpec<>(WildcardQueryBuilder.NAME, WildcardQueryBuilder::new, WildcardQueryBuilder::fromXContent));
+        // constant_score  查询解析器
         registerQuery(
                 new QuerySpec<>(ConstantScoreQueryBuilder.NAME, ConstantScoreQueryBuilder::new, ConstantScoreQueryBuilder::fromXContent));
+        // span_term  查询解析器
         registerQuery(new QuerySpec<>(SpanTermQueryBuilder.NAME, SpanTermQueryBuilder::new, SpanTermQueryBuilder::fromXContent));
+        // span_not  查询解析器
         registerQuery(new QuerySpec<>(SpanNotQueryBuilder.NAME, SpanNotQueryBuilder::new, SpanNotQueryBuilder::fromXContent));
+        // span_within  查询解析器
         registerQuery(new QuerySpec<>(SpanWithinQueryBuilder.NAME, SpanWithinQueryBuilder::new, SpanWithinQueryBuilder::fromXContent));
+        // span_containing  查询解析器
         registerQuery(new QuerySpec<>(SpanContainingQueryBuilder.NAME, SpanContainingQueryBuilder::new,
                 SpanContainingQueryBuilder::fromXContent));
+        // field_masking_span  查询解析器
         registerQuery(new QuerySpec<>(FieldMaskingSpanQueryBuilder.NAME, FieldMaskingSpanQueryBuilder::new,
                 FieldMaskingSpanQueryBuilder::fromXContent));
+        // span_first  查询解析器
         registerQuery(new QuerySpec<>(SpanFirstQueryBuilder.NAME, SpanFirstQueryBuilder::new, SpanFirstQueryBuilder::fromXContent));
+        // span_near  查询解析器
         registerQuery(new QuerySpec<>(SpanNearQueryBuilder.NAME, SpanNearQueryBuilder::new, SpanNearQueryBuilder::fromXContent));
+        // span_gap  查询解析器
         registerQuery(new QuerySpec<>(SpanGapQueryBuilder.NAME, SpanGapQueryBuilder::new, SpanGapQueryBuilder::fromXContent));
+        // span_or  查询解析器
         registerQuery(new QuerySpec<>(SpanOrQueryBuilder.NAME, SpanOrQueryBuilder::new, SpanOrQueryBuilder::fromXContent));
+        // more_like_this  查询解析器
         registerQuery(new QuerySpec<>(MoreLikeThisQueryBuilder.NAME, MoreLikeThisQueryBuilder::new,
                 MoreLikeThisQueryBuilder::fromXContent));
+        // wrapper  查询解析器
         registerQuery(new QuerySpec<>(WrapperQueryBuilder.NAME, WrapperQueryBuilder::new, WrapperQueryBuilder::fromXContent));
+        // common  查询解析器
         registerQuery(new QuerySpec<>(new ParseField(CommonTermsQueryBuilder.NAME).withAllDeprecated(COMMON_TERMS_QUERY_DEPRECATION_MSG),
                 CommonTermsQueryBuilder::new, CommonTermsQueryBuilder::fromXContent));
+        // span_multi  查询解析器
         registerQuery(
                 new QuerySpec<>(SpanMultiTermQueryBuilder.NAME, SpanMultiTermQueryBuilder::new, SpanMultiTermQueryBuilder::fromXContent));
+        // function_score  查询解析器
         registerQuery(new QuerySpec<>(FunctionScoreQueryBuilder.NAME, FunctionScoreQueryBuilder::new,
                 FunctionScoreQueryBuilder::fromXContent));
+        // script_score  查询解析器
         registerQuery(new QuerySpec<>(ScriptScoreQueryBuilder.NAME, ScriptScoreQueryBuilder::new, ScriptScoreQueryBuilder::fromXContent));
+        // simple_query_string  查询解析器
         registerQuery(
                 new QuerySpec<>(SimpleQueryStringBuilder.NAME, SimpleQueryStringBuilder::new, SimpleQueryStringBuilder::fromXContent));
+        // type  查询解析器
         registerQuery(new QuerySpec<>(TypeQueryBuilder.NAME, TypeQueryBuilder::new, TypeQueryBuilder::fromXContent));
+        // script  查询解析器
         registerQuery(new QuerySpec<>(ScriptQueryBuilder.NAME, ScriptQueryBuilder::new, ScriptQueryBuilder::fromXContent));
+        // geo_distance  查询解析器
         registerQuery(new QuerySpec<>(GeoDistanceQueryBuilder.NAME, GeoDistanceQueryBuilder::new, GeoDistanceQueryBuilder::fromXContent));
+        // geo_bounding_box  查询解析器
         registerQuery(new QuerySpec<>(GeoBoundingBoxQueryBuilder.NAME, GeoBoundingBoxQueryBuilder::new,
                 GeoBoundingBoxQueryBuilder::fromXContent));
+        // geo_polygon  查询解析器
         registerQuery(new QuerySpec<>(GeoPolygonQueryBuilder.NAME, GeoPolygonQueryBuilder::new, GeoPolygonQueryBuilder::fromXContent));
+        // exists  查询解析器
         registerQuery(new QuerySpec<>(ExistsQueryBuilder.NAME, ExistsQueryBuilder::new, ExistsQueryBuilder::fromXContent));
+        // match_none  查询解析器
         registerQuery(new QuerySpec<>(MatchNoneQueryBuilder.NAME, MatchNoneQueryBuilder::new, MatchNoneQueryBuilder::fromXContent));
+        // terms_set  查询解析器
         registerQuery(new QuerySpec<>(TermsSetQueryBuilder.NAME, TermsSetQueryBuilder::new, TermsSetQueryBuilder::fromXContent));
+        // intervals  查询解析器
         registerQuery(new QuerySpec<>(IntervalQueryBuilder.NAME, IntervalQueryBuilder::new, IntervalQueryBuilder::fromXContent));
+        // distance_feature  查询解析器
         registerQuery(new QuerySpec<>(DistanceFeatureQueryBuilder.NAME, DistanceFeatureQueryBuilder::new,
             DistanceFeatureQueryBuilder::fromXContent));
+        // match_bool_prefix  查询解析器
         registerQuery(
             new QuerySpec<>(MatchBoolPrefixQueryBuilder.NAME, MatchBoolPrefixQueryBuilder::new, MatchBoolPrefixQueryBuilder::fromXContent));
+
 
         if (ShapesAvailability.JTS_AVAILABLE && ShapesAvailability.SPATIAL4J_AVAILABLE) {
             registerQuery(new QuerySpec<>(GeoShapeQueryBuilder.NAME, GeoShapeQueryBuilder::new, GeoShapeQueryBuilder::fromXContent));
         }
 
+        // 注册插件的查询
         registerFromPlugin(plugins, SearchPlugin::getQueries, this::registerQuery);
     }
 

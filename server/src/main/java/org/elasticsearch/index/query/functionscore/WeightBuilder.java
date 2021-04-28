@@ -29,6 +29,8 @@ import java.io.IOException;
 
 /**
  * A query that multiplies the weight to the score.
+ *
+ * 将权重与得分相乘的查询。
  */
 public class WeightBuilder extends ScoreFunctionBuilder<WeightBuilder> {
     public static final String NAME = "weight";
