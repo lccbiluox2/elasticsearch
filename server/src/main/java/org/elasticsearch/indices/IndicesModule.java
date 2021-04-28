@@ -93,8 +93,11 @@ public class IndicesModule extends AbstractModule {
     }
 
     private void registerBuiltinWritables() {
+        // 索引最大的年龄条件，当达到这个条件做一些操作比如索引滚动 生命周期
         namedWritables.add(new NamedWriteableRegistry.Entry(Condition.class, MaxAgeCondition.NAME, MaxAgeCondition::new));
+        // 索引最大的文档数量条件，当达到这个条件做一些操作比如索引滚动 生命周期
         namedWritables.add(new NamedWriteableRegistry.Entry(Condition.class, MaxDocsCondition.NAME, MaxDocsCondition::new));
+        // 索引最大的大小条件，当达到这个条件做一些操作比如索引滚动 生命周期
         namedWritables.add(new NamedWriteableRegistry.Entry(Condition.class, MaxSizeCondition.NAME, MaxSizeCondition::new));
     }
 
@@ -117,10 +120,10 @@ public class IndicesModule extends AbstractModule {
         Map<String, Mapper.TypeParser> mappers = new LinkedHashMap<>();
 
         // builtin mappers
-        for (NumberFieldMapper.NumberType type : NumberFieldMapper.NumberType.values()) {
+        for (NumberFieldMapper.NumberType type : NumberFieldMapper.NumberType.values()) {  // 数字类型
             mappers.put(type.typeName(), new NumberFieldMapper.TypeParser(type));
         }
-        for (RangeType type : RangeType.values()) {
+        for (RangeType type : RangeType.values()) { // 范围类型
             mappers.put(type.typeName(), new RangeFieldMapper.TypeParser(type));
         }
         mappers.put(BooleanFieldMapper.CONTENT_TYPE, new BooleanFieldMapper.TypeParser());
@@ -144,6 +147,11 @@ public class IndicesModule extends AbstractModule {
                     throw new IllegalArgumentException("Mapper [" + entry.getKey() + "] is already registered");
                 }
             }
+        }
+        for (Map.Entry<String, Mapper.TypeParser> item:mappers.entrySet()){
+            String key = item.getKey();
+            Mapper.TypeParser value = item.getValue();
+            System.out.println(key +" -> "+ value.toString());
         }
         return Collections.unmodifiableMap(mappers);
     }
@@ -199,6 +207,12 @@ public class IndicesModule extends AbstractModule {
 
         // we register _field_names here so that it has a chance to see all the other mappers, including from plugins
         metadataMappers.put(fieldNamesEntry.getKey(), fieldNamesEntry.getValue());
+
+        for (Map.Entry<String, MetadataFieldMapper.TypeParser> item:metadataMappers.entrySet()){
+            String key = item.getKey();
+            MetadataFieldMapper.TypeParser value = item.getValue();
+            System.out.println(key +" -> "+ value.getClass().getName());
+        }
         return Collections.unmodifiableMap(metadataMappers);
     }
 

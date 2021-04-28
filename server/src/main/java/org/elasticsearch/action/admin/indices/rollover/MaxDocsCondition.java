@@ -29,6 +29,8 @@ import java.io.IOException;
 /**
  * Condition for maximum index docs. Evaluates to <code>true</code>
  * when the index has at least {@link #value} docs
+ *
+ * 索引最大的文档数量条件，当达到这个条件做一些操作比如索引滚动 生命周期
  */
 public class MaxDocsCondition extends Condition<Long> {
     public static final String NAME = "max_docs";

@@ -34,7 +34,9 @@ import java.util.Objects;
  */
 public class NamedWriteableRegistry {
 
-    /** An entry in the registry, made up of a category class and name, and a reader for that category class. */
+    /** An entry in the registry, made up of a category class and name, and a reader for that category class.
+     * 注册表中的一项，由类别类和名称以及该类别类的阅读器组成。
+     * */
     public static class Entry {
 
         /** The superclass of a {@link NamedWriteable} which will be read by {@link #reader}. */
