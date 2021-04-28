@@ -98,19 +98,19 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
         this.clusterService = clusterService;
         this.threadPool = threadPool;
         // allow to control a delay of when indices will get created
-        this.expectedNodes = EXPECTED_NODES_SETTING.get(settings);
-        this.expectedDataNodes = EXPECTED_DATA_NODES_SETTING.get(settings);
-        this.expectedMasterNodes = EXPECTED_MASTER_NODES_SETTING.get(settings);
+        this.expectedNodes = EXPECTED_NODES_SETTING.get(settings); // 默认 -1
+        this.expectedDataNodes = EXPECTED_DATA_NODES_SETTING.get(settings); // 默认 -1
+        this.expectedMasterNodes = EXPECTED_MASTER_NODES_SETTING.get(settings); // 默认 -1
 
-        if (RECOVER_AFTER_TIME_SETTING.exists(settings)) {
+        if (RECOVER_AFTER_TIME_SETTING.exists(settings)) {  // 网关在启动后多久开始恢复
             recoverAfterTime = RECOVER_AFTER_TIME_SETTING.get(settings);
         } else if (expectedNodes >= 0 || expectedDataNodes >= 0 || expectedMasterNodes >= 0) {
             recoverAfterTime = DEFAULT_RECOVER_AFTER_TIME_IF_EXPECTED_NODES_IS_SET;
         } else {
             recoverAfterTime = null;
         }
-        this.recoverAfterNodes = RECOVER_AFTER_NODES_SETTING.get(settings);
-        this.recoverAfterDataNodes = RECOVER_AFTER_DATA_NODES_SETTING.get(settings);
+        this.recoverAfterNodes = RECOVER_AFTER_NODES_SETTING.get(settings); // 默认 -1
+        this.recoverAfterDataNodes = RECOVER_AFTER_DATA_NODES_SETTING.get(settings); // 默认 -1
         // default the recover after master nodes to the minimum master nodes in the discovery
         if (RECOVER_AFTER_MASTER_NODES_SETTING.exists(settings)) {
             recoverAfterMasterNodes = RECOVER_AFTER_MASTER_NODES_SETTING.get(settings);

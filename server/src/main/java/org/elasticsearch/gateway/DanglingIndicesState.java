@@ -80,6 +80,7 @@ public class DanglingIndicesState implements ClusterStateListener {
         this.metaStateService = metaStateService;
         this.allocateDangledIndices = allocateDangledIndices;
 
+        // 是否自动引入悬空索引
         this.isAutoImportDanglingIndicesEnabled = AUTO_IMPORT_DANGLING_INDICES_SETTING.get(clusterService.getSettings());
 
         if (this.isAutoImportDanglingIndicesEnabled) {

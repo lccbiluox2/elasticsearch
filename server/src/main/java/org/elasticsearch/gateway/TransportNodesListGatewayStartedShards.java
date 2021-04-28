@@ -59,6 +59,9 @@ import java.util.Objects;
  * This transport action is used to fetch the shard version from each node during primary allocation in {@link GatewayAllocator}.
  * We use this to find out which node holds the latest shard version and which of them used to be a primary in order to allocate
  * shards after node or cluster restarts.
+ *
+ * 这个传输动作用于在{@link GatewayAllocator}的主分配期间从每个节点获取分片版本。我们用它来找出哪个节点拥有最新的分片版本，
+ * 以及它们中的哪个曾经是主节点，以便在节点或集群重启后分配分片。
  */
 public class TransportNodesListGatewayStartedShards extends
     TransportNodesAction<TransportNodesListGatewayStartedShards.Request,

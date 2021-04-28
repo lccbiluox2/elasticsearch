@@ -74,6 +74,7 @@ public class LocalAllocateDangledIndices {
         this.clusterService = clusterService;
         this.allocationService = allocationService;
         this.metadataIndexUpgradeService = metadataIndexUpgradeService;
+        // 注册了 AllocateDangledRequest 处理器
         transportService.registerRequestHandler(ACTION_NAME, ThreadPool.Names.SAME, AllocateDangledRequest::new,
             new AllocateDangledRequestHandler());
     }

@@ -26,10 +26,15 @@ public class GatewayModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        // 悬空索引
         bind(DanglingIndicesState.class).asEagerSingleton();
+        // 网关服务
         bind(GatewayService.class).asEagerSingleton();
+        // 传输节点网关元数据
         bind(TransportNodesListGatewayMetaState.class).asEagerSingleton();
+        // 传输节点网关分区
         bind(TransportNodesListGatewayStartedShards.class).asEagerSingleton();
+        // 本地分配失败的索引
         bind(LocalAllocateDangledIndices.class).asEagerSingleton();
     }
 }
