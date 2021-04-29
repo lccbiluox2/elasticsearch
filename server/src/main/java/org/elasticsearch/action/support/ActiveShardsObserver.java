@@ -36,6 +36,8 @@ import java.util.function.Predicate;
 /**
  * This class provides primitives for waiting for a configured number of shards
  * to become active before sending a response on an {@link ActionListener}.
+ *
+ * 这个类提供了一些原语，用于在{@link ActionListener}上发送响应之前，等待配置的多个shard成为活动的。
  */
 public class ActiveShardsObserver {
 
