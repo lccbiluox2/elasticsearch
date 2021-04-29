@@ -36,7 +36,9 @@ import static org.elasticsearch.common.recycler.Recyclers.concurrentDeque;
 import static org.elasticsearch.common.recycler.Recyclers.dequeFactory;
 import static org.elasticsearch.common.recycler.Recyclers.none;
 
-/** A recycler of fixed-size pages. */
+/** A recycler of fixed-size pages.
+ * 固定大小页面的回收者。
+ * */
 public class PageCacheRecycler {
 
     public static final Setting<Type> TYPE_SETTING =
@@ -72,8 +74,11 @@ public class PageCacheRecycler {
     }
 
     public PageCacheRecycler(Settings settings) {
+        // 获取配置中的 page 回收类型
         final Type type = TYPE_SETTING.get(settings);
+        // cache.recycler.page.limit.heap 获取限制大小
         final long limit = LIMIT_HEAP_SETTING.get(settings).getBytes();
+        // 获取分配的处理器个数
         final int allocatedProcessors = EsExecutors.allocatedProcessors(settings);
 
         // We have a global amount of memory that we need to divide across data types.
@@ -89,14 +94,22 @@ public class PageCacheRecycler {
         // to direct ByteBuffers or sun.misc.Unsafe on a byte[] but this would have other issues
         // that would need to be addressed such as garbage collection of native memory or safety
         // of Unsafe writes.
-        final double bytesWeight = WEIGHT_BYTES_SETTING .get(settings);
-        final double intsWeight = WEIGHT_INT_SETTING .get(settings);
-        final double longsWeight = WEIGHT_LONG_SETTING .get(settings);
-        final double objectsWeight = WEIGHT_OBJECTS_SETTING .get(settings);
 
+        // 我们有一个全局的内存量，我们需要将其划分到不同的数据类型。由于某些类型比其他类型更有用，我们给它们不同的权重。
+        // 尝试将它们全部存储在一个堆栈中会有问题，因为。一个工作负载可能只使用 byte[] 页填充回收器，然后另一个可以使用
+        // double[] 页的工作负载无法回收它们，因为堆栈/队列中没有剩余空间。LRU/LFU策略也不是一个选项，因为它们会让
+        // 获取/发布的代价太大:我们真的需要常量时间
+        final double bytesWeight = WEIGHT_BYTES_SETTING .get(settings);  // 字节权重
+        final double intsWeight = WEIGHT_INT_SETTING .get(settings);    // int权重
+        final double longsWeight = WEIGHT_LONG_SETTING .get(settings);// long权重
+        final double objectsWeight = WEIGHT_OBJECTS_SETTING .get(settings);// 对象权重
+
+        // 总的权重
         final double totalWeight = bytesWeight + intsWeight + longsWeight + objectsWeight;
+        // 最大页大小
         final int maxPageCount = (int) Math.min(Integer.MAX_VALUE, limit / PAGE_SIZE_IN_BYTES);
 
+        // 最大字节页大小
         final int maxBytePageCount = (int) (bytesWeight * maxPageCount / totalWeight);
         bytePage = build(type, maxBytePageCount, allocatedProcessors, new AbstractRecyclerC<byte[]>() {
             @Override

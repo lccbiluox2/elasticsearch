@@ -65,6 +65,10 @@ public class EsExecutors {
      * Setting to manually control the number of allocated processors. This setting is used to adjust thread pool sizes per node. The
      * default value is {@link Runtime#availableProcessors()} but should be manually controlled if not all processors on the machine are
      * available to Elasticsearch (e.g., because of CPU limits).
+     *
+     * 设置为手动控制分配的处理器数量。此设置用于调整每个节点的线程池大小。
+     * 默认值是{@link Runtime#availableProcessors()}，但是如果机器上的处理器
+     * 不能被Elasticsearch使用(例如，由于CPU的限制)，那么应该手动控制。
      */
     public static final Setting<Integer> NODE_PROCESSORS_SETTING = new Setting<>(
         "node.processors",
