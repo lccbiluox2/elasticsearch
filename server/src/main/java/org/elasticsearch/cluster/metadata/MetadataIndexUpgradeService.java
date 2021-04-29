@@ -50,6 +50,11 @@ import java.util.Set;
  * to upgrade the existing index metadata to the latest version of the cluster. It typically
  * occurs during cluster upgrade, when dangling indices are imported into the cluster or indices
  * are restored from a repository.
+ *
+ * 该服务负责将遗留索引元数据升级到当前版本
+ *
+ * 每次将现有索引引入集群时，都应该使用此服务将现有索引元数据升级到集群的最新版本。
+ * 它通常发生在集群升级期间，当悬空索引被导入集群或从存储库中恢复索引时。
  */
 public class MetadataIndexUpgradeService {
 

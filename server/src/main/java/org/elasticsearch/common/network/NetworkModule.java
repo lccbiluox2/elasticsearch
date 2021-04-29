@@ -19,6 +19,8 @@
 
 package org.elasticsearch.common.network;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.support.replication.ReplicationTask;
 import org.elasticsearch.cluster.routing.allocation.command.AllocateEmptyPrimaryAllocationCommand;
 import org.elasticsearch.cluster.routing.allocation.command.AllocateReplicaAllocationCommand;
@@ -63,6 +65,7 @@ import java.util.function.Supplier;
  * A module to handle registering and binding all network related classes.
  */
 public final class NetworkModule {
+    protected final Logger logger = LogManager.getLogger(getClass());
 
     public static final String TRANSPORT_TYPE_KEY = "transport.type";
     public static final String HTTP_TYPE_KEY = "http.type";
@@ -106,6 +109,9 @@ public final class NetworkModule {
 
     /**
      * Creates a network module that custom networking classes can be plugged into.
+     *
+     * 创建可插入自定义网络类的网络模块。
+     *
      * @param settings The settings for the node
      * @param transportClient True if only transport classes should be allowed to be registered, false otherwise.
      */
@@ -138,6 +144,7 @@ public final class NetworkModule {
                 registerTransportInterceptor(interceptor);
             }
         }
+        logger.info("初始化 NetworkModule 完毕");
     }
 
     public boolean isTransportClient() {
