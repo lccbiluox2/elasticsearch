@@ -213,15 +213,19 @@ public class MetadataCreateIndexService {
      * Validate the name for an index or alias against some static rules.
      */
     public static void validateIndexOrAliasName(String index, BiFunction<String, String, ? extends RuntimeException> exceptionCtor) {
+        // 是否包含特殊字符
         if (!Strings.validFileName(index)) {
             throw exceptionCtor.apply(index, "must not contain the following characters " + Strings.INVALID_FILENAME_CHARS);
         }
+        // 是否包含# 号
         if (index.contains("#")) {
             throw exceptionCtor.apply(index, "must not contain '#'");
         }
+        // 是否包含 ： 号
         if (index.contains(":")) {
             throw exceptionCtor.apply(index, "must not contain ':'");
         }
+        // 第一个字符不能是 空格  中划线 加号
         if (index.charAt(0) == '_' || index.charAt(0) == '-' || index.charAt(0) == '+') {
             throw exceptionCtor.apply(index, "must not start with '_', '-', or '+'");
         }
@@ -232,9 +236,11 @@ public class MetadataCreateIndexService {
             // UTF-8 should always be supported, but rethrow this if it is not for some reason
             throw new ElasticsearchException("Unable to determine length of index name", e);
         }
+        // 别名最长是255个字段
         if (byteCount > MAX_INDEX_NAME_BYTES) {
             throw exceptionCtor.apply(index, "index name is too long, (" + byteCount + " > " + MAX_INDEX_NAME_BYTES + ")");
         }
+        // 不能是点 和 点点
         if (index.equals(".") || index.equals("..")) {
             throw exceptionCtor.apply(index, "must not be '.' or '..'");
         }

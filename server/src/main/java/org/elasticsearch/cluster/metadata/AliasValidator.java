@@ -47,6 +47,10 @@ public class AliasValidator {
     /**
      * Allows to validate an {@link org.elasticsearch.action.admin.indices.alias.Alias} and make sure
      * it's valid before it gets added to the index metadata. Doesn't validate the alias filter.
+     *
+     * 允许验证一个{@link org.elasticsearch.action.admin.indices.alias.Alias}，
+     * 并确保它在被添加到索引元数据之前是有效的。不验证别名过滤器。
+     *
      * @throws IllegalArgumentException if the alias is not valid
      */
     public void validateAlias(Alias alias, String index, Metadata metadata) {
