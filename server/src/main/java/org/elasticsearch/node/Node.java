@@ -454,6 +454,8 @@ public class Node implements Closeable {
 
             logger.info("初始化 NamedWriteableRegistry  ");
             final NamedWriteableRegistry namedWriteableRegistry = new NamedWriteableRegistry(namedWriteables);
+
+            logger.info("初始化 NamedWriteableRegistry  ");
             NamedXContentRegistry xContentRegistry = new NamedXContentRegistry(Stream.of(
                 NetworkModule.getNamedXContents().stream(),
                 IndicesModule.getNamedXContents().stream(),
