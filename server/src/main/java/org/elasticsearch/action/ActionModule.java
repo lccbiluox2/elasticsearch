@@ -438,15 +438,21 @@ public class ActionModule extends AbstractModule {
         this.settingsFilter = settingsFilter;
         this.actionPlugins = actionPlugins;
         this.clusterService = clusterService;
+        // 设置能接收哪些action
         actions = setupActions(actionPlugins);
+        // 从插件中设置过滤器
         actionFilters = setupActionFilters(actionPlugins);
+        // 封装了在一个不存在的索引中将要发生写操作时是否应该自动创建新索引的逻辑。
         autoCreateIndex = transportClient ? null : new AutoCreateIndex(settings, clusterSettings, indexNameExpressionResolver);
+        // 处理破坏性操作和通配符使用的助手。
         destructiveOperations = new DestructiveOperations(settings, clusterSettings);
         Set<RestHeaderDefinition> headers = Stream.concat(
             actionPlugins.stream().flatMap(p -> p.getRestHeaders().stream()),
             Stream.of(new RestHeaderDefinition(Task.X_OPAQUE_ID, false))
         ).collect(Collectors.toSet());
         UnaryOperator<RestHandler> restWrapper = null;
+
+        // 获取一元操作
         for (ActionPlugin plugin : actionPlugins) {
             UnaryOperator<RestHandler> newRestWrapper = plugin.getRestHandlerWrapper(threadPool.getThreadContext());
             if (newRestWrapper != null) {
@@ -457,6 +463,7 @@ public class ActionModule extends AbstractModule {
                 restWrapper = newRestWrapper;
             }
         }
+        // 请求校验器
         mappingRequestValidators = new RequestValidators<>(
             actionPlugins.stream().flatMap(p -> p.mappingRequestValidators().stream()).collect(Collectors.toList()));
         indicesAliasesRequestRequestValidators = new RequestValidators<>(
@@ -465,6 +472,7 @@ public class ActionModule extends AbstractModule {
         if (transportClient) {
             restController = null;
         } else {
+            // 创建 RestController
             restController = new RestController(headers, restWrapper, nodeClient, circuitBreakerService, usageService);
         }
     }

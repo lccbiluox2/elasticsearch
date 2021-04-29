@@ -26,6 +26,8 @@ import org.elasticsearch.common.settings.Settings;
 
 /**
  * Helper for dealing with destructive operations and wildcard usage.
+ *
+ * 处理破坏性操作和通配符使用的助手。
  */
 public final class DestructiveOperations {
 
