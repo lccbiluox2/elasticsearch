@@ -258,10 +258,13 @@ public class IndicesService extends AbstractLifecycleComponent
         this.shardsClosedTimeout = settings.getAsTime(INDICES_SHARDS_CLOSED_TIMEOUT, new TimeValue(1, TimeUnit.DAYS));
         this.analysisRegistry = analysisRegistry;
         this.indexNameExpressionResolver = indexNameExpressionResolver;
+        // 缓存一些聚合请求或者分片请求，因为这些请求代价比较大
         this.indicesRequestCache = new IndicesRequestCache(settings);
+        // 根据配置构建2中查询缓存之一
         this.indicesQueryCache = new IndicesQueryCache(settings);
         this.mapperRegistry = mapperRegistry;
         this.namedWriteableRegistry = namedWriteableRegistry;
+        // 索引内存 conrtroller TODO: 不知道干么的
         indexingMemoryController = new IndexingMemoryController(settings, threadPool,
             // ensure we pull an iter with new shards - flatten makes a copy
             () -> Iterables.flatten(this).iterator());
@@ -282,6 +285,7 @@ public class IndicesService extends AbstractLifecycleComponent
             }
         });
         this.cleanInterval = INDICES_CACHE_CLEAN_INTERVAL_SETTING.get(settings);
+        // 构建一个缓存清理对象
         this.cacheCleaner = new CacheCleaner(indicesFieldDataCache, indicesRequestCache, logger, threadPool, this.cleanInterval);
         this.metaStateService = metaStateService;
         this.engineFactoryProviders = engineFactoryProviders;
@@ -299,6 +303,10 @@ public class IndicesService extends AbstractLifecycleComponent
         // avoid closing these resources while ongoing requests are still being processed, we use a
         // ref count which will only close them when both this service and all index services are
         // actually closed
+        //
+        // 当关闭一个节点时调用doClose()，但是在关闭一些资源(如缓存)之前，可能仍然需要等待正在进行的请求。
+        // 为了避免在正在进行的请求仍在处理时关闭这些资源，我们使用ref count，它只会在该服务和所有索引服务
+        // 实际上都关闭时关闭它们
         indicesRefCount = new AbstractRefCounted("indices") {
             @Override
             protected void closeInternal() {
@@ -1270,7 +1278,7 @@ public class IndicesService extends AbstractLifecycleComponent
      * has an entry invalidated may not clean up the entry if it is not read from
      * or written to after invalidation.
      *
-     * FieldDataCacheCleaner是一个定时运行的可运行对象，用于定期清理番石榴缓存。在这种情况下，
+     * FieldDataCacheCleaner是一个定时运行的可运行对象，用于定期清理番Guava缓存。在这种情况下，
      * 它是字段数据缓存，因为如果一个无效的条目在失效后没有被读取或写入，那么缓存可能不会清理该条目。
      */
     private static final class CacheCleaner implements Runnable, Releasable {

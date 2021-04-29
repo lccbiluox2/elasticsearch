@@ -41,6 +41,8 @@ import java.util.function.Predicate;
 
 /**
  * Handles writing and loading {@link Manifest}, {@link Metadata} and {@link IndexMetadata}
+ *
+ * 处理编写和加载{@link Manifest}， {@link Metadata}和{@link IndexMetadata}
  */
 public class MetaStateService {
     private static final Logger logger = LogManager.getLogger(MetaStateService.class);
@@ -64,6 +66,13 @@ public class MetaStateService {
      * If there is no manifest file on disk, this method fallbacks to BWC mode, where latest generation of global and indices
      * metadata is loaded. Please note that currently there is no way to distinguish between manifest file being removed and manifest
      * file was not yet created. It means that this method always fallbacks to BWC mode, if there is no manifest file.
+     *
+     * 加载完整状态，其中包括全局状态和所有索引元数据。
+     *
+     * 当加载时，参考清单文件(由{@link Manifest}类表示)，加载正确的。
+     *
+     * 如果磁盘上没有清单文件，此方法回退到BWC模式，在该模式下加载最新一代全局和索引元数据。请注意
+     * ，目前没有办法区分清单文件被删除和清单文件尚未创建。这意味着如果没有清单文件，该方法总是回退到BWC模式。
      *
      * @return tuple of {@link Manifest} and {@link Metadata} with global metadata and indices metadata. If there is no state on disk,
      * meta state with globalGeneration -1 and empty meta data is returned.

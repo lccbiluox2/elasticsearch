@@ -467,6 +467,8 @@ public class Node implements Closeable {
 
             logger.info("初始化 MetaStateService  ");
             final MetaStateService metaStateService = new MetaStateService(nodeEnvironment, xContentRegistry);
+
+            logger.info("初始化 PersistedClusterStateService  ");
             final PersistedClusterStateService lucenePersistedStateFactory
                 = new PersistedClusterStateService(nodeEnvironment, xContentRegistry, bigArrays, clusterService.getClusterSettings(),
                 threadPool::relativeTimeInMillis);

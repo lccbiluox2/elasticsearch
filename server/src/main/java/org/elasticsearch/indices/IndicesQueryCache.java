@@ -79,6 +79,7 @@ public class IndicesQueryCache implements QueryCache, Closeable {
         final int count = INDICES_CACHE_QUERY_COUNT_SETTING.get(settings);
         logger.debug("using [node] query cache with size [{}] max filter count [{}]",
                 size, count);
+        // 根据配置设置缓存策略
         if (INDICES_QUERIES_CACHE_ALL_SEGMENTS_SETTING.get(settings)) {
             cache = new ElasticsearchLRUQueryCache(count, size.getBytes(), context -> true, 1f);
         } else {

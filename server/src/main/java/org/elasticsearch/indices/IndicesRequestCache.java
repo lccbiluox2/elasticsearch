@@ -65,6 +65,15 @@ import java.util.function.Supplier;
  * <p>
  * There are still several TODOs left in this class, some easily addressable, some more complex, but the support
  * is functional.
+ *
+ * 索引请求缓存允许缓存分片级别的请求阶段响应，帮助改进可能昂贵的类似请求(例如，由于aggs)。缓存与NRT的语义完全一致
+ * (索引读取器缓存键是缓存键的一部分)，并且依赖于基于大小的逐出来逐出旧的读取器关联的缓存条目，以及调度程序reaper来
+ * 清理不再使用的读取器或关闭的碎片。
+ *
+ * 目前，缓存仅为计数请求启用，并且只能在索引级别设置中进行选择，该设置可以动态更改，默认值为false。
+ *
+ * 这个类中仍然有一些todo，一些很容易寻址，一些更复杂，但是支持是功能性的。
+ *
  */
 public final class IndicesRequestCache implements RemovalListener<IndicesRequestCache.Key, BytesReference>, Closeable {
 

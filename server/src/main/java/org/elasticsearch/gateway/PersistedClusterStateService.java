@@ -94,6 +94,9 @@ import java.util.function.Supplier;
  * to record the last-accepted cluster state during publication. The metadata is written incrementally where possible, leaving alone any
  * documents that have not changed. The index has the following fields:
  *
+ * 将集群元数据存储在横跨多个空Lucene索引(每个数据路径)中。符合主节点资格的节点将使用它来记录发布期间最后接受的集群状态。
+ * 尽可能增量地增加元数据，而不是更改已有的文档。该索引包含以下字段:
+ *
  * +------------------------------+-----------------------------+----------------------------------------------+
  * | "type" (string field)        | "index_uuid" (string field) | "data" (stored binary field in SMILE format) |
  * +------------------------------+-----------------------------+----------------------------------------------+
@@ -102,6 +105,9 @@ import java.util.function.Supplier;
  * +------------------------------+-----------------------------+----------------------------------------------+
  *
  * Additionally each commit has the following user data:
+ * 另外，每次提交都有以下用户数据:
+ *
+ *
  *
  * +---------------------------+-------------------------+-------------------------------------------------------------------------------+
  * |        Key symbol         |       Key literal       |                                     Value                                     |
@@ -113,6 +119,8 @@ import java.util.function.Supplier;
  * +---------------------------+-------------------------+-------------------------------------------------------------------------------+
  *
  * (the last-accepted term is recorded in Metadata → CoordinationMetadata so does not need repeating here)
+ * 最后一个被接受的术语记录在Metadata→CoordinationMetadata中，所以不需要在这里重复
+ *
  */
 public class PersistedClusterStateService {
     private static final Logger logger = LogManager.getLogger(PersistedClusterStateService.class);
