@@ -39,6 +39,10 @@ import java.util.function.BiFunction;
  * A {@link BatchedRerouteService} is a {@link RerouteService} that batches together reroute requests to avoid unnecessary extra reroutes.
  * This component only does meaningful work on the elected master node. Reroute requests will fail with a {@link NotMasterException} on
  * other nodes.
+ *
+ * {@link BatchedRerouteService}是一个{@link RerouteService}，它批量处理重路由请求，以避免不必要的额外重路由。
+ *
+ * 该组件只在选定的主节点上执行有意义的工作。重新路由请求将在其他节点上以{@link NotMasterException}失败。
  */
 public class BatchedRerouteService implements RerouteService {
     private static final Logger logger = LogManager.getLogger(BatchedRerouteService.class);
@@ -54,6 +58,8 @@ public class BatchedRerouteService implements RerouteService {
     private Priority pendingTaskPriority = Priority.LANGUID;
 
     /**
+     * 在群集被重新路由后计算更新的群集状态。
+     *
      * @param reroute Function that computes the updated cluster state after it has been rerouted.
      */
     public BatchedRerouteService(ClusterService clusterService, BiFunction<ClusterState, String, ClusterState> reroute) {
@@ -63,6 +69,8 @@ public class BatchedRerouteService implements RerouteService {
 
     /**
      * Initiates a reroute.
+     *
+     * 发起一个路由
      */
     @Override
     public final void reroute(String reason, Priority priority, ActionListener<ClusterState> listener) {

@@ -62,6 +62,8 @@ import static org.elasticsearch.node.Node.NODE_NAME_SETTING;
 
 /**
  * A module for loading classes for node discovery.
+ *
+ * 一个用于加载节点发现类的模块。
  */
 public class DiscoveryModule {
     private static final Logger logger = LogManager.getLogger(DiscoveryModule.class);
@@ -97,8 +99,11 @@ public class DiscoveryModule {
         hostProviders.put("settings", () -> new SettingsBasedSeedHostsProvider(settings, transportService));
         hostProviders.put("file", () -> new FileBasedSeedHostsProvider(configFile));
         final Map<String, ElectionStrategy> electionStrategies = new HashMap<>();
+
+        // 设置默认的 选举策略
         electionStrategies.put(DEFAULT_ELECTION_STRATEGY, ElectionStrategy.DEFAULT_INSTANCE);
         for (DiscoveryPlugin plugin : plugins) {
+            // 返回用于发现的种子主机的提供者。
             plugin.getSeedHostProviders(transportService, networkService).forEach((key, value) -> {
                 if (hostProviders.put(key, value) != null) {
                     throw new IllegalArgumentException("Cannot register seed provider [" + key + "] twice");
@@ -108,6 +113,7 @@ public class DiscoveryModule {
             if (joinValidator != null) {
                 joinValidators.add(joinValidator);
             }
+            // 加载插件中的选举策略
             plugin.getElectionStrategies().forEach((key, value) -> {
                 if (electionStrategies.put(key, value) != null) {
                     throw new IllegalArgumentException("Cannot register election strategy [" + key + "] twice");
@@ -115,6 +121,7 @@ public class DiscoveryModule {
             });
         }
 
+        // TODO: 这一步不知道干嘛
         List<String> seedProviderNames = getSeedProviderNames(settings);
         // for bwc purposes, add settings provider even if not explicitly specified
         if (seedProviderNames.contains("settings") == false) {
@@ -143,18 +150,21 @@ public class DiscoveryModule {
             return Collections.unmodifiableList(addresses);
         };
 
+        // 获取配置的选举策略
         final ElectionStrategy electionStrategy = electionStrategies.get(ELECTION_STRATEGY_SETTING.get(settings));
         if (electionStrategy == null) {
             throw new IllegalArgumentException("Unknown election strategy " + ELECTION_STRATEGY_SETTING.get(settings));
         }
 
         if (ZEN2_DISCOVERY_TYPE.equals(discoveryType) || SINGLE_NODE_DISCOVERY_TYPE.equals(discoveryType)) {
+            // TODO: 这个是什么
             discovery = new Coordinator(NODE_NAME_SETTING.get(settings),
                 settings, clusterSettings,
                 transportService, namedWriteableRegistry, allocationService, masterService, gatewayMetaState::getPersistedState,
                 seedHostsProvider, clusterApplier, joinValidators, new Random(Randomness.get().nextLong()), rerouteService,
                 electionStrategy);
         } else if (ZEN_DISCOVERY_TYPE.equals(discoveryType)) {
+            // ZenDiscovery 好像集群一般使用这个
             discovery = new ZenDiscovery(settings, threadPool, transportService, namedWriteableRegistry, masterService, clusterApplier,
                 clusterSettings, seedHostsProvider, allocationService, joinValidators, rerouteService);
         } else {

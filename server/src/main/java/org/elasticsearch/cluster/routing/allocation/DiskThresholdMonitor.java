@@ -61,6 +61,8 @@ import java.util.stream.StreamSupport;
  * Listens for a node to go over the high watermark and kicks off an empty
  * reroute if it does. Also responsible for logging about nodes that have
  * passed the disk watermarks
+ *
+ * 侦听节点越过高水位并在此情况下启动空重路由。还负责记录通过磁盘水印的节点
  */
 public class DiskThresholdMonitor {
 
@@ -78,18 +80,33 @@ public class DiskThresholdMonitor {
     /**
      * The IDs of the nodes that were over the low threshold in the last check (and maybe over another threshold too). Tracked so that we
      * can log when such nodes are no longer over the low threshold.
+     *
+     * 在最后一次检查中超过低阈值的节点id(可能也超过了另一个阈值)。跟踪这些节点，
+     * 以便在这些节点不再超过低阈值时记录日志。
+     *
+     * 超过低阈值的节点
      */
     private final Set<String> nodesOverLowThreshold = Sets.newConcurrentHashSet();
 
     /**
      * The IDs of the nodes that were over the high threshold in the last check (and maybe over another threshold too). Tracked so that we
      * can log when such nodes are no longer over the high threshold.
+     *
+     * 在最后一次检查中超过高阈值的节点id(可能也超过了另一个阈值)。跟踪这些节点，
+     * 以便我们可以在这些节点不再超过高阈值时记录日志。
+     *
+     * 超过高阈值的节点
      */
     private final Set<String> nodesOverHighThreshold = Sets.newConcurrentHashSet();
 
     /**
      * The IDs of the nodes that were over the high threshold in the last check, but which are relocating shards that will bring them
      * under the high threshold again. Tracked so that we can log when such nodes are no longer in this state.
+     *
+     * 在最后一次检查中超过高阈值的节点的id，但这些节点正在重新定位碎片，这将使它们再次低于高阈值。跟踪这些节点，
+     * 以便我们可以在这些节点不再处于这种状态时记录日志。
+     *
+     * 超过高阈值的节点 而且 节点迁移了
      */
     private final Set<String> nodesOverHighThresholdAndRelocating = Sets.newConcurrentHashSet();
 
@@ -98,6 +115,7 @@ public class DiskThresholdMonitor {
         this.clusterStateSupplier = clusterStateSupplier;
         this.currentTimeMillisSupplier = currentTimeMillisSupplier;
         this.rerouteService = rerouteService;
+        // 获取磁盘阈值设置
         this.diskThresholdSettings = new DiskThresholdSettings(settings, clusterSettings);
         this.client = client;
         if (diskThresholdSettings.isAutoReleaseIndexEnabled() == false) {

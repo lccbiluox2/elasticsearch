@@ -25,6 +25,9 @@ import org.elasticsearch.cluster.node.DiscoveryNode;
 /**
  * Allows plugging in a custom election strategy, restricting the notion of an election quorum.
  * Custom additional quorum restrictions can be defined by implementing the {@link #satisfiesAdditionalQuorumConstraints} method.
+ *
+ * 允许插入自定义选举策略，限制选举法定人数的概念。自定义附加仲裁限制可以通过实现
+ * {@link #satisfiesAdditionalQuorumConstraints}方法来定义。
  */
 public abstract class ElectionStrategy {
 
@@ -43,6 +46,8 @@ public abstract class ElectionStrategy {
 
     /**
      * Whether there is an election quorum from the point of view of the given local node under the provided voting configurations
+     *
+     * 在规定的投票架构下，从指定的本地节点的角度看，是否有选举法定人数
      */
     public final boolean isElectionQuorum(DiscoveryNode localNode, long localCurrentTerm, long localAcceptedTerm, long localAcceptedVersion,
                                           VotingConfiguration lastCommittedConfiguration, VotingConfiguration lastAcceptedConfiguration,
@@ -55,6 +60,9 @@ public abstract class ElectionStrategy {
 
     /**
      * The extension point to be overridden by plugins. Defines additional constraints on the election quorum.
+     *
+     * 被插件覆盖的扩展点。定义选举法定人数的附加约束。
+     *
      * @param localNode                  the local node for the election quorum
      * @param localCurrentTerm           the current term of the local node
      * @param localAcceptedTerm          the last accepted term of the local node

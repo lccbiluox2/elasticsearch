@@ -151,8 +151,10 @@ public class VotingOnlyNodePlugin extends Plugin implements DiscoveryPlugin, Net
                                                             long localAcceptedVersion, VotingConfiguration lastCommittedConfiguration,
                                                             VotingConfiguration lastAcceptedConfiguration, VoteCollection joinVotes) {
             // if local node is voting only, have additional checks on election quorum definition
+            // 如果本地节点仅进行投票，则对选举仲裁定义进行额外检查,是否只 包含投票节点
             if (isVotingOnlyNode(localNode)) {
                 // if all votes are from voting only nodes, do not elect as master (no need to transfer state)
+                // 如果所有投票都来自只投票的节点，不要选择为主节点(不需要转移状态)
                 if (joinVotes.nodes().stream().filter(DiscoveryNode::isMasterNode).allMatch(VotingOnlyNodePlugin::isVotingOnlyNode)) {
                     return false;
                 }
@@ -165,6 +167,16 @@ public class VotingOnlyNodePlugin extends Plugin implements DiscoveryPlugin, Net
                 //    As voting-only nodes only broadcast the state to the full master nodes, eventually all of them will have caught up
                 //    and there should not be any remaining full master nodes with older state, effectively disabling election of
                 //    voting-only nodes.
+
+                // 如果有一个完整的主节点的投票具有相同的状态(例如，最后接受的术语和版本匹配)，那么该节点应该成为主节点，
+                // 所以我们应该退出。然而，有两种例外情况:
+                //
+                // 1. 如果我们在项0中。在这种情况下，我们允许选举仅投票的节点，以避免只引导仅投票的节点的有害情况。
+                // 2. 如果有另一个完整的主节点的旧状态。在这种情况下，当在同一个选举中添加新的joinVotes时，我们确保
+                //    satisfesadditionalquorumconstraints不能从true变为false。
+                //
+                //    由于仅支持投票的节点只将状态广播给完整的主节点，最终所有的主节点都会赶上来，因此应该不会有任何剩余的
+                //    完整主节点处于较旧的状态，从而有效地禁用了仅支持投票的节点的选举。
                 if (joinVotes.getJoins().stream().anyMatch(fullMasterWithSameState(localAcceptedTerm, localAcceptedVersion)) &&
                     localAcceptedTerm > 0 &&
                     joinVotes.getJoins().stream().noneMatch(fullMasterWithOlderState(localAcceptedTerm, localAcceptedVersion))) {

@@ -32,6 +32,9 @@ public interface RerouteService {
 
     /**
      * Schedule a cluster reroute.
+     *
+     * 调度集群重新路由。
+     *
      * @param priority the (minimum) priority at which to run this reroute. If there is already a pending reroute at a higher priority then
      *                 this reroute is batched with the pending one; if there is already a pending reroute at a lower priority then
      *                 the priority of the pending batch is raised to the given priority.

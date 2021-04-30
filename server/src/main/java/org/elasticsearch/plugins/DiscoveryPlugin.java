@@ -44,6 +44,10 @@ import java.util.function.Supplier;
  *     }
  * }
  * }</pre>
+ *
+ * 一个额外的扩展点{@link Plugin}扩展了Elasticsearch的发现功能。添加一个额外的{@link NetworkService。只需实现接口，
+ * 并实现{@link #getCustomNameResolver(Settings)}方法:
+ *
  */
 public interface DiscoveryPlugin {
 
@@ -53,8 +57,13 @@ public interface DiscoveryPlugin {
      * and implement by yourself the logic to get an actual IP address/hostname based on this
      * name.
      *
+     * 覆盖以添加额外的{@link NetworkService.CustomNameResolver}。如果您希望提供自己的网络接口名称(如_mycard_)，
+     * 并自己实现基于此名称获得实际IP地址/主机名的逻辑，那么这很方便。
+     *
      * For example: you could call a third party service (an API) to resolve _mycard_.
      * Then you could define in elasticsearch.yml settings like:
+     *
+     * 例如:您可以调用第三方服务(API)来解析_mycard_。然后可以在elasticsearch中进行定义。yml设置:
      *
      * <pre>{@code
      * network.host: _mycard_
@@ -66,6 +75,8 @@ public interface DiscoveryPlugin {
 
     /**
      * Returns providers of seed hosts for discovery.
+     *
+     * 返回用于发现的种子主机的提供者。
      *
      * The key of the returned map is the name of the host provider
      * (see {@link org.elasticsearch.discovery.DiscoveryModule#DISCOVERY_SEED_PROVIDERS_SETTING}), and
