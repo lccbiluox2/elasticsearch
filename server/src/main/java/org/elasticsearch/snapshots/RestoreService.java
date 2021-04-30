@@ -115,6 +115,8 @@ import static org.elasticsearch.snapshots.SnapshotUtils.filterIndices;
  * At the end of the successful restore process {@code RestoreService} calls {@link #cleanupRestoreState(ClusterChangedEvent)},
  * which removes {@link RestoreInProgress} when all shards are completed. In case of
  * restore failure a normal recovery fail-over process kicks in.
+ *
+ * 负责恢复快照的服务
  */
 public class RestoreService implements ClusterStateApplier {
 

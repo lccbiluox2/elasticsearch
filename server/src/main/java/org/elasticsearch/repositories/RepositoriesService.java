@@ -59,6 +59,8 @@ import java.util.Map;
 
 /**
  * Service responsible for maintaining and providing access to snapshot repositories on nodes.
+ *
+ * 负责维护和提供对节点上的快照存储库的访问的服务。
  */
 public class RepositoriesService extends AbstractLifecycleComponent implements ClusterStateApplier {
 

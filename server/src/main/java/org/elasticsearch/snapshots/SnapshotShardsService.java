@@ -90,6 +90,8 @@ import static org.elasticsearch.cluster.SnapshotsInProgress.completed;
 /**
  * This service runs on data and master nodes and controls currently snapshotted shards on these nodes. It is responsible for
  * starting and stopping shard level snapshots
+ *
+ * 该服务在数据和主节点上运行，并控制这些节点上的当前快照碎片。它负责启动和停止碎片级快照
  */
 public class SnapshotShardsService extends AbstractLifecycleComponent implements ClusterStateListener, IndexEventListener {
     private static final Logger logger = LogManager.getLogger(SnapshotShardsService.class);

@@ -24,6 +24,8 @@ import org.elasticsearch.common.Priority;
 
 /**
  * Asynchronously performs a cluster reroute, updating any shard states and rebalancing the cluster if appropriate.
+ *
+ * 异步执行集群重新路由，更新任何分片状态并在适当的情况下重新平衡集群。
  */
 @FunctionalInterface
 public interface RerouteService {

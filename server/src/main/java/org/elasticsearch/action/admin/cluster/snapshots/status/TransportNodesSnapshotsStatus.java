@@ -50,6 +50,8 @@ import static java.util.Collections.unmodifiableMap;
 
 /**
  * Transport client that collects snapshot shard statuses from data nodes
+ *
+ * 从数据节点收集快照分片状态的传输客户端
  */
 public class TransportNodesSnapshotsStatus extends TransportNodesAction<TransportNodesSnapshotsStatus.Request,
                                                                         TransportNodesSnapshotsStatus.NodesSnapshotStatus,

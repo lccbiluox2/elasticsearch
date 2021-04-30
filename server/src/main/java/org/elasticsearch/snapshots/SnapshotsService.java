@@ -100,6 +100,8 @@ import static org.elasticsearch.cluster.SnapshotsInProgress.completed;
 /**
  * Service responsible for creating snapshots. See package level documentation of {@link org.elasticsearch.snapshots}
  * for details.
+ *
+ * 负责创建快照的服务。参见包级文档{@link org.elasticsearch。快照}。
  */
 public class SnapshotsService extends AbstractLifecycleComponent implements ClusterStateApplier {
 
