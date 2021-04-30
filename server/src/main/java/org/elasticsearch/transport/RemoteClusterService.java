@@ -64,6 +64,8 @@ import static org.elasticsearch.common.settings.Setting.timeSetting;
 
 /**
  * Basic service for accessing remote clusters via gateway nodes
+ *
+ * 通过网关节点访问远程集群的基本服务
  */
 public final class RemoteClusterService extends RemoteClusterAware implements Closeable {
 

@@ -78,6 +78,13 @@ import static org.elasticsearch.common.util.concurrent.EsExecutors.daemonThreadF
  * the state being loaded when constructing the instance of this class is not necessarily the state that will be used as {@link
  * ClusterState#metadata()} because it might be stale or incomplete. Master-eligible nodes must perform an election to find a complete and
  * non-stale state, and master-ineligible nodes receive the real cluster state from the elected master after joining the cluster.
+ *
+ * 在启动时加载(可能升级)集群元数据，并持久化存储集群元数据以备将来重新启动。
+ *
+ * 启动时，确保此版本与存储在磁盘上的状态兼容，并在必要时执行状态升级。请注意，在构造该类实例时加载
+ * 的状态不一定是将作为{@link ClusterState#metadata()}使用的状态，因为它可能是过时的或不完整的。
+ * 符合主节点资格的节点必须执行一次选举，以找到一个完整且不过时的状态，而不符合主节点资格的节点在加入
+ * 集群后从被选的主节点接收真实的集群状态。
  */
 public class GatewayMetaState implements Closeable {
 
@@ -85,6 +92,10 @@ public class GatewayMetaState implements Closeable {
      * Fake node ID for a voting configuration written by a master-ineligible data node to indicate that its on-disk state is potentially
      * stale (since it is written asynchronously after application, rather than before acceptance). This node ID means that if the node is
      * restarted as a master-eligible node then it does not win any elections until it has received a fresh cluster state.
+     *
+     * 投票配置的假节点ID由不符合主条件的数据节点编写，以表明其磁盘上状态可能已经过时(因为它是在应用程序
+     * 之后异步编写的，而不是在接受之前)。这个节点ID意味着，如果该节点被重新启动为符合主资格的节点
+     * ，那么它将不会赢得任何选举，直到它收到一个新的集群状态。
      */
     public static final String STALE_STATE_CONFIG_NODE_ID = "STALE_STATE_CONFIG";
 

@@ -57,14 +57,19 @@ public abstract class AbstractLifecycleComponent implements LifecycleComponent {
     public void start() {
         logger.info("启动生命周期：AbstractLifecycleComponent");
         synchronized (lifecycle) {
+            // 如果生命周期已经启动，那么返回
             if (!lifecycle.canMoveToStarted()) {
                 return;
             }
+            // 启动生命周期监听器的前置方法
             for (LifecycleListener listener : listeners) {
                 listener.beforeStart();
             }
+            /** 抽象方法 调用每个子类的 doStart */
             doStart();
+            // 切换状态为启动
             lifecycle.moveToStarted();
+            //  启动生命周期监听器后置方法
             for (LifecycleListener listener : listeners) {
                 listener.afterStart();
             }

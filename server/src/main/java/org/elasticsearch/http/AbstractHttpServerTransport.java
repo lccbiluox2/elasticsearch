@@ -101,17 +101,24 @@ public abstract class AbstractHttpServerTransport extends AbstractLifecycleCompo
         this.corsConfig = CorsHandler.fromSettings(settings);
 
         // we can't make the network.bind_host a fallback since we already fall back to http.host hence the extra conditional here
+        // 我们修改了配置network.bind_host 改成  http.bind_host
         List<String> httpBindHost = SETTING_HTTP_BIND_HOST.get(settings);
+        // 如果 http.bind_host 这个配置为空 我们才使用 network.bind_host
         this.bindHosts = (httpBindHost.isEmpty() ? NetworkService.GLOBAL_NETWORK_BIND_HOST_SETTING.get(settings) : httpBindHost)
             .toArray(Strings.EMPTY_ARRAY);
         // we can't make the network.publish_host a fallback since we already fall back to http.host hence the extra conditional here
+        // 默认现在使用 http.publish_host 不使用 network.publish_host
         List<String> httpPublishHost = SETTING_HTTP_PUBLISH_HOST.get(settings);
         this.publishHosts = (httpPublishHost.isEmpty() ? NetworkService.GLOBAL_NETWORK_PUBLISH_HOST_SETTING.get(settings) : httpPublishHost)
             .toArray(Strings.EMPTY_ARRAY);
 
+        // 获取http 暴露的ip
         this.port = SETTING_HTTP_PORT.get(settings);
 
+        // 获取 http.max_content_length http 最大的连接数
         this.maxContentLength = SETTING_HTTP_MAX_CONTENT_LENGTH.get(settings);
+
+        // Http请求跟踪记录器。 主要是在请求开始和请求返回打印日志
         this.tracer = new HttpTracer(settings, clusterSettings);
     }
 

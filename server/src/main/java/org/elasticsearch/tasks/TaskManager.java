@@ -63,6 +63,8 @@ import static org.elasticsearch.http.HttpTransportSettings.SETTING_HTTP_MAX_HEAD
 
 /**
  * Task Manager service for keeping track of currently running tasks on the nodes
+ *
+ * 任务管理器服务，用于跟踪节点上当前运行的任务
  */
 public class TaskManager implements ClusterStateApplier {
 

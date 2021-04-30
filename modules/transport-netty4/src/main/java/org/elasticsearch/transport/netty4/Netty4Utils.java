@@ -43,6 +43,8 @@ public class Netty4Utils {
     /**
      * Set the number of available processors that Netty uses for sizing various resources (e.g., thread pools).
      *
+     * 设置Netty用于调整各种资源(例如，线程池)大小的可用处理器数量。
+     *
      * @param availableProcessors the number of available processors
      * @throws IllegalStateException if available processors was set previously and the specified value does not match the already-set value
      */

@@ -35,6 +35,8 @@ import java.util.List;
 
 /**
  * Http request trace logger. See {@link #maybeTraceRequest(RestRequest, Exception)} for details.
+ *
+ * Http请求跟踪记录器。详情请参见{@link #maybeTraceRequest(RestRequest, Exception)}。
  */
 class HttpTracer {
 

@@ -64,6 +64,8 @@ import java.util.function.BiFunction;
 /**
  * An encapsulation of {@link org.elasticsearch.search.SearchService} operations exposed through
  * transport.
+ *
+ * 封装{@link org.elasticsearch.search.SearchService}操作。
  */
 public class SearchTransportService {
 

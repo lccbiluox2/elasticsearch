@@ -21,6 +21,7 @@ package org.elasticsearch.common.component;
 
 /**
  * Lifecycle state. Allows the following transitions:
+ * 生命周期状态。允许以下转换:
  * <ul>
  * <li>INITIALIZED -&gt; STARTED, STOPPED, CLOSED</li>
  * <li>STARTED     -&gt; STOPPED</li>
@@ -30,6 +31,9 @@ package org.elasticsearch.common.component;
  * <p>
  * Also allows to stay in the same state. For example, when calling stop on a component, the
  * following logic can be applied:
+ *
+ * 也允许保持在相同的状态。例如，在组件上调用stop时，可以应用以下逻辑:
+ *
  * <pre>
  * public void stop() {
  *  if (!lifecycleState.moveToStopped()) {
@@ -41,11 +45,18 @@ package org.elasticsearch.common.component;
  * <p>
  * NOTE: The Lifecycle class is thread-safe. It is also possible to prevent concurrent state transitions
  * by locking on the Lifecycle object itself. This is typically useful when chaining multiple transitions.
+ *
+ * 注意:Lifecycle类是线程安全的。通过锁定Lifecycle对象本身，也可以防止并发状态转换。
+ * 当链接多个转换时，这通常是有用的。
+ *
  * <p>
  * Note, closed is only allowed to be called when stopped, so make sure to stop the component first.
  * Here is how the logic can be applied. A lock of the {@code lifecycleState} object is taken so that
  * another thread cannot move the state from {@code STOPPED} to {@code STARTED} before it has moved to
  * {@code CLOSED}.
+ *
+ * 注意，closed只允许在停止时调用，所以请确保先停止组件。下面是如何应用逻辑。{@code lifecycleState}对象的锁被获取，
+ * 这样其他线程就不能在它移动到{@code STOPPED}之前将状态从{@code STOPPED}移动到{@code STARTED}
  * <pre>
  * public void close() {
  *  synchronized (lifecycleState) {

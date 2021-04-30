@@ -1190,6 +1190,7 @@ public class Node implements Closeable {
 
     /** Constructs a {@link org.elasticsearch.http.HttpServerTransport} which may be mocked for tests. */
     protected HttpServerTransport newHttpTransport(NetworkModule networkModule) {
+        // 不要求每次调用提供者时都返回一个新的或不同的结果。
         return networkModule.getHttpServerTransportSupplier().get();
     }
 
