@@ -43,6 +43,7 @@ public class ModulesBuilder implements Iterable<Module> {
         ((InjectorImpl) injector).clearCache();
         // in ES, we always create all instances as if they are eager singletons
         // this allows for considerable memory savings (no need to store construction info) as well as cycles
+        // 在ES中，我们总是创建所有的实例，就像它们是渴望的单例一样，这允许相当大的内存节省(不需要存储构造信息)和周期
         ((InjectorImpl) injector).readOnlyAllSingletons();
         return injector;
     }

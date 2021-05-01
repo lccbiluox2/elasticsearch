@@ -38,6 +38,14 @@ import static org.elasticsearch.common.settings.Setting.Property.NodeScope;
  * </ul>
  *
  * @see Allocation
+ *
+ * {@link EnableAssignmentDecider}用于允许/禁止将持久任务分配给集群节点。
+ * 分配设置可以有以下值(不区分大小写):
+ *
+ * NONE -不能分配持久任务
+ *
+ * ALL -所有持久化任务都可以分配给节点
+ *
  */
 public class EnableAssignmentDecider {
 

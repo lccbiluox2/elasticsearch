@@ -196,6 +196,8 @@ import static java.util.stream.Collectors.toList;
 /**
  * A node represent a node within a cluster ({@code cluster.name}). The {@link #client()} can be used
  * in order to use a {@link Client} to perform actions/operations against the cluster.
+ *
+ * 节点表示集群中的一个节点({@code cluster.name})。可以使用{@link #client()}来使用{@link client}来对集群执行操作。
  */
 public class Node implements Closeable {
     public static final Setting<Boolean> WRITE_PORTS_FILE_SETTING =
@@ -715,6 +717,10 @@ public class Node implements Closeable {
             // completes we trigger another reroute to try the allocation again. This means there is a circular dependency: the allocation
             // service needs access to the existing shards allocators (e.g. the GatewayAllocator) which need to be able to trigger a
             // reroute, which needs to call into the allocation service. We close the loop here:
+
+            // 我们通过在集群中寻找一个可行的分片副本并在该分片中进行分配来分配现有分片的副本。可行副本的搜索是由分配尝试(即重新路由)
+            // 触发的，并异步执行。当它完成时，我们触发另一个重路由来再次尝试分配。这意味着存在一个循环依赖:分配服务需要访问现有的分片
+            // 分配器(例如GatewayAllocator)，这些分片分配器需要能够触发重新路由，这需要调用分配服务。我们在这里结束这个循环:
             clusterModule.setExistingShardsAllocators(injector.getInstance(GatewayAllocator.class));
 
             List<LifecycleComponent> pluginLifecycleComponents = pluginComponents.stream()
@@ -1149,6 +1155,8 @@ public class Node implements Closeable {
 
     /**
      * Creates a new the SearchService. This method can be overwritten by tests to inject mock implementations.
+     *
+     * 一个新的SearchService。测试可以覆盖此方法以注入模拟实现。
      */
     protected SearchService newSearchService(ClusterService clusterService, IndicesService indicesService,
                                              ThreadPool threadPool, ScriptService scriptService, BigArrays bigArrays,

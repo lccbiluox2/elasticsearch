@@ -46,6 +46,8 @@ import java.util.Objects;
 
 /**
  * Component that runs only on the master node and is responsible for assigning running tasks to nodes
+ *
+ * 只在主节点上运行的组件，负责将正在运行的任务分配给节点
  */
 public class PersistentTasksClusterService implements ClusterStateListener, Closeable {
 
@@ -65,8 +67,10 @@ public class PersistentTasksClusterService implements ClusterStateListener, Clos
                                          ThreadPool threadPool) {
         this.clusterService = clusterService;
         this.registry = registry;
+        // 用于允许/禁止将持久任务分配给集群节点。
         this.decider = new EnableAssignmentDecider(settings, clusterService.getClusterSettings());
         this.threadPool = threadPool;
+        // 类定期尝试重新分配未分配的持久任务。
         this.periodicRechecker = new PeriodicRechecker(CLUSTER_TASKS_ALLOCATION_RECHECK_INTERVAL_SETTING.get(settings));
         clusterService.addListener(this);
         clusterService.getClusterSettings().addSettingsUpdateConsumer(CLUSTER_TASKS_ALLOCATION_RECHECK_INTERVAL_SETTING,
@@ -322,6 +326,8 @@ public class PersistentTasksClusterService implements ClusterStateListener, Clos
 
     /**
      * Submit a cluster state update to reassign any persistent tasks that need reassigning
+     *
+     * 提交集群状态更新以重新分配需要重新分配的任何持久任务
      */
     private void reassignPersistentTasks() {
         clusterService.submitStateUpdateTask("reassign persistent tasks", new ClusterStateUpdateTask() {
@@ -380,6 +386,8 @@ public class PersistentTasksClusterService implements ClusterStateListener, Clos
 
     /**
      * Returns true if any persistent task is unassigned.
+     *
+     * 如果任何持久任务未分配，则返回true。
      */
     private boolean isAnyTaskUnassigned(final PersistentTasksCustomMetadata tasks) {
         return tasks != null && tasks.tasks().stream().anyMatch(task -> task.getAssignment().isAssigned() == false);
@@ -390,6 +398,8 @@ public class PersistentTasksClusterService implements ClusterStateListener, Clos
      *
      * @param currentState the cluster state to analyze
      * @return an updated version of the cluster state
+     *
+     * 评估集群状态并尝试将任务分配给节点。
      */
     ClusterState reassignTasks(final ClusterState currentState) {
         ClusterState clusterState = currentState;
@@ -449,6 +459,8 @@ public class PersistentTasksClusterService implements ClusterStateListener, Clos
 
     /**
      * Class to periodically try to reassign unassigned persistent tasks.
+     *
+     * 类定期尝试重新分配未分配的持久任务。
      */
     private class PeriodicRechecker extends AbstractAsyncTask {
 
@@ -466,6 +478,7 @@ public class PersistentTasksClusterService implements ClusterStateListener, Clos
             if (clusterService.localNode().isMasterNode()) {
                 final ClusterState state = clusterService.state();
                 logger.trace("periodic persistent task assignment check running for cluster state {}", state.getVersion());
+                // 如果任何持久任务未分配，则返回true。
                 if (isAnyTaskUnassigned(state.getMetadata().custom(PersistentTasksCustomMetadata.TYPE))) {
                     reassignPersistentTasks();
                 }

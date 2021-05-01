@@ -25,11 +25,17 @@ import java.util.Map;
 
 /**
  * Components that registers all persistent task executors
+ *
+ * 注册所有持久任务执行器的组件
  */
 public class PersistentTasksExecutorRegistry {
 
     private final Map<String, PersistentTasksExecutor<?>> taskExecutors;
 
+    /**
+     * 就是把传入的taskExecutors 按名称封装在一个Map中
+     * @param taskExecutors
+     */
     public PersistentTasksExecutorRegistry(Collection<PersistentTasksExecutor<?>> taskExecutors) {
         Map<String, PersistentTasksExecutor<?>> map = new HashMap<>();
         for (PersistentTasksExecutor<?> executor : taskExecutors) {

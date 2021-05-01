@@ -43,6 +43,19 @@ import java.util.List;
  *
  * @author crazybob@google.com (Bob Lee)
  * @author jessewilson@google.com (Jesse Wilson)
+ *
+ * 构建一个注入器树。这是一个主注入器，加上每个{@link Binder#newPrivateBinder() private environment}所需要的子注入器。
+ * 主注入器不一定是顶层注入器。
+ *
+ * 注入器的建设分为两个阶段。
+ *
+ * 静态的building。在这个阶段，我们解释命令、创建绑定和检查依赖项。在此阶段，我们持有一个锁，以确保与父注入器的一致性。
+ * 在此阶段不执行任何用户代码。
+ *
+ * 动态的注入。在这个阶段，我们称之为用户代码。我们注入请求注入的成员。这可能需要创建用户的对象并调用它们的提供者。
+ * 我们创造了渴望单身的人。在此阶段，用户代码可能已经启动了其他线程。这个阶段不会被使用{@link Stage#TOOL the TOOL Stage}
+ * 创建的注入器执行。
+ *
  */
 class InjectorBuilder {
 
