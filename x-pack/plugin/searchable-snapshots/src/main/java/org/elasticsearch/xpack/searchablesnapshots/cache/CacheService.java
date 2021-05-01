@@ -26,6 +26,9 @@ import java.util.function.Predicate;
 /**
  * {@link CacheService} maintains a cache entry for all files read from searchable snapshot directories (
  * see {@link org.elasticsearch.index.store.SearchableSnapshotDirectory})
+ *
+ * {@link CacheService}维护从可搜索快照目录读取的所有文件的缓存条目(参见
+ * {@link org.elasticsearch.index.store.SearchableSnapshotDirectory})
  */
 public class CacheService extends AbstractLifecycleComponent {
 
@@ -71,6 +74,7 @@ public class CacheService extends AbstractLifecycleComponent {
     @Override
     protected void doStart() {
         // NORELEASE TODO clean up (or rebuild) cache from disk as a node crash may leave cached files
+        // NORELEASE TODO从磁盘清理(或重建)缓存，因为节点崩溃可能会留下缓存文件
     }
 
     @Override

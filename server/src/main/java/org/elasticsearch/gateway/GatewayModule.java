@@ -35,6 +35,7 @@ public class GatewayModule extends AbstractModule {
         // 传输节点网关分区
         bind(TransportNodesListGatewayStartedShards.class).asEagerSingleton();
         // 本地分配失败的索引
+
         bind(LocalAllocateDangledIndices.class).asEagerSingleton();
     }
 }
