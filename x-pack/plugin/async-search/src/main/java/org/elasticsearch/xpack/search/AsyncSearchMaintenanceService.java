@@ -21,6 +21,8 @@ public class AsyncSearchMaintenanceService extends AsyncTaskMaintenanceService {
      * Defaults to 1h. It is an undocumented/expert setting that
      * is mainly used by integration tests to make the garbage
      * collection of search responses more reactive.
+     *
+     * 控制计划清理的时间间隔。默认为1h。这是一个没有文档记录的/专家设置，主要用于集成测试，以使搜索响应的垃圾收集更具反应性。
      */
     public static final Setting<TimeValue> ASYNC_SEARCH_CLEANUP_INTERVAL_SETTING =
         Setting.timeSetting("async_search.index_cleanup_interval", TimeValue.timeValueHours(1), Setting.Property.NodeScope);

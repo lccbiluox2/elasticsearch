@@ -33,6 +33,11 @@ import static org.elasticsearch.xpack.core.async.AsyncTaskIndexService.EXPIRATIO
  * <p>
  * Since we will have several injected implementation of this class injected into different transports, and we bind components created
  * by {@linkplain org.elasticsearch.plugins.Plugin#createComponents} to their classes, we need to implement one class per binding.
+ *
+ * 对异步执行索引运行定期清理的服务。
+ *
+ * 因为我们将把这个类的几个注入实现注入到不同的传输中，并且我们绑定了由{@linkplain org.elasticsearch.plugins.Plugin#createComponents} 。
+ * 对于它们的类，我们需要实现每个绑定一个类。
  */
 public abstract class AsyncTaskMaintenanceService extends AbstractLifecycleComponent implements ClusterStateListener {
     private static final Logger logger = LogManager.getLogger(AsyncTaskMaintenanceService.class);
