@@ -55,6 +55,11 @@ import java.util.stream.Stream;
  * On the master node, the service handles updating the cluster state when a new license is registered.
  * It also listens on all nodes for cluster state updates, and updates {@link XPackLicenseState} when
  * the license changes are detected in the cluster state.
+ *
+ * LicenseService是负责管理`LicensesMetadata`的服务。
+ *
+ * 在主节点上，该服务在注册新许可证时处理集群状态的更新。它还侦听所有节点的集群状态更新，并在集群状态中检测到
+ * 许可证更改时更新`XPackLicenseState`。
  */
 public class LicenseService extends AbstractLifecycleComponent implements ClusterStateListener, SchedulerEngine.Listener {
     private static final Logger logger = LogManager.getLogger(LicenseService.class);
@@ -135,6 +140,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
         this.settings = settings;
         this.clusterService = clusterService;
         this.clock = clock;
+        // 初始化了一个单线程的 newScheduledThreadPool
         this.scheduler = new SchedulerEngine(settings, clock);
         this.licenseState = licenseState;
         this.allowedLicenseTypes = ALLOWED_LICENSE_TYPES_SETTING.get(settings);
@@ -142,6 +148,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
             XPackPlugin.resolveConfigFile(env, "license_mode"), logger,
             () -> updateLicenseState(getLicensesMetadata()));
         this.scheduler.register(this);
+        // 填充到期的回调方法 主要是一些日志打印
         populateExpirationCallbacks();
     }
 
@@ -383,7 +390,7 @@ public class LicenseService extends AbstractLifecycleComponent implements Cluste
 
     @Override
     protected void doStart() throws ElasticsearchException {
-        clusterService.addListener(this);
+        clusterService.addListener(this); // 添加到监听器了
         scheduler.start(Collections.emptyList());
         logger.debug("initializing license state");
         if (clusterService.lifecycleState() == Lifecycle.State.STARTED) {

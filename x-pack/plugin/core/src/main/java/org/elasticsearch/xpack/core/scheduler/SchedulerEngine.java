@@ -117,6 +117,7 @@ public class SchedulerEngine {
 
     SchedulerEngine(final Settings settings, final Clock clock, final Logger logger) {
         this.clock = Objects.requireNonNull(clock, "clock");
+        // 初始化单线程的调度器
         this.scheduler = Executors.newScheduledThreadPool(
                 1,  EsExecutors.daemonThreadFactory(Objects.requireNonNull(settings, "settings"), "trigger_engine_scheduler"));
         this.logger = Objects.requireNonNull(logger, "logger");

@@ -792,6 +792,7 @@ public class Node implements Closeable {
      * Start the node. If the node is already started, this method is no-op.
      */
     public Node start() throws NodeValidationException {
+        //  判断服务是不是已经启动了
         if (!lifecycle.moveToStarted()) {
             return this;
         }
