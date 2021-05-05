@@ -133,6 +133,7 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
     @Override
     protected void doStart() {
         // use post applied so that the state will be visible to the background recovery thread we spawn in performStateRecovery
+        // 使用post apply使状态对我们在performstaterrecovery中生成的后台恢复线程可见
         clusterService.addListener(this);
     }
 

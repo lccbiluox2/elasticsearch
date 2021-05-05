@@ -19,6 +19,8 @@
 
 package org.elasticsearch.monitor;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.env.NodeEnvironment;
@@ -33,6 +35,9 @@ import org.elasticsearch.cluster.ClusterInfoService;
 import java.io.IOException;
 
 public class MonitorService extends AbstractLifecycleComponent {
+
+    private final Logger logger = LogManager.getLogger(MonitorService .class);
+
 
     private final JvmGcMonitorService jvmGcMonitorService;
     private final OsService osService;
@@ -72,6 +77,7 @@ public class MonitorService extends AbstractLifecycleComponent {
 
     @Override
     protected void doStart() {
+        logger.info("启动 jvmGcMonitorService ");
         jvmGcMonitorService.start();
     }
 

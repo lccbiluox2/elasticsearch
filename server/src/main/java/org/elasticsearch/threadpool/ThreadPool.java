@@ -362,10 +362,13 @@ public class ThreadPool implements ReportingService<ThreadPoolInfo>, Scheduler {
      */
     @Override
     public ScheduledCancellable schedule(Runnable command, TimeValue delay, String executor) {
+        // 将 Runnable command 包装一下
         command = threadContext.preserveContext(command);
         if (!Names.SAME.equals(executor)) {
             command = new ThreadedRunnable(command, executor(executor));
         }
+        // 然后开始调度
+        // 然后 将 ScheduledFuture 封装为 ScheduledCancellableAdapter
         return new ScheduledCancellableAdapter(scheduler.schedule(command, delay.millis(), TimeUnit.MILLISECONDS));
     }
 

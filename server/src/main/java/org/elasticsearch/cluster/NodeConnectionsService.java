@@ -67,6 +67,21 @@ import static org.elasticsearch.common.settings.Setting.positiveTimeSetting;
  * <p>
  * This component does not block on disconnections at all, because a disconnection might need to wait for an ongoing (background) connection
  * attempt to complete first.
+ *
+ * 该组件负责维护从该节点到集群状态中列出的所有节点的连接，并在节点从集群状态中移除后断开与它们的连接。它定期检查所有连接是否仍然打开，
+ * 并在需要时恢复它们。请注意，如果节点断开或无响应，该组件不负责从集群状态中删除节点:这是主节点的故障检测组件的工作，特别是
+ * {@link FollowersChecker}。
+ *
+ *
+ *
+ * {@link NodeConnectionsService#connectToNodes(DiscoveryNodes, Runnable)}和
+ * {@link NodeConnectionsService# disconnectfromnodeexception(DiscoveryNodes)}方法在
+ * {@link ClusterApplier}线程上被调用。这个组件允许{@code ClusterApplier}阻塞到_new_节点的连接，
+ * 因为系统的其余部分将与集群状态下的另一个节点的连接缺失视为异常情况，我们不希望这种情况发生在新节点上。
+ * 然而，我们不需要在重新建立现有连接时阻塞，因为如果连接断开，那么我们就已经处于一个异常情况，
+ * 如果我们在这种情况下停留的时间更长一点也没有什么关系。
+ *
+ * 此组件根本不会阻止断开连接，因为断开连接可能需要首先等待正在进行的(后台)连接尝试完成。
  */
 public class NodeConnectionsService extends AbstractLifecycleComponent {
     private static final Logger logger = LogManager.getLogger(NodeConnectionsService.class);
@@ -186,6 +201,9 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
      * Makes a single attempt to reconnect to any nodes which are disconnected but should be connected. Does not attempt to reconnect any
      * nodes which are in the process of disconnecting. The onCompletion handler is called after all ongoing connection/disconnection
      * attempts have completed.
+     *
+     * 尝试重新连接任何已断开但应连接的节点。不尝试重新连接正在断开连接的任何节点。
+     * onCompletion处理程序在所有正在进行的连接/断开尝试完成后被调用。
      */
     private void connectDisconnectedTargets(Runnable onCompletion) {
         final List<Runnable> runnables = new ArrayList<>();
@@ -208,6 +226,7 @@ public class NodeConnectionsService extends AbstractLifecycleComponent {
     class ConnectionChecker extends AbstractRunnable {
         protected void doRun() {
             if (connectionChecker == this) {
+                // 这里默认传入的是自己的方法  scheduleNextCheck
                 connectDisconnectedTargets(this::scheduleNextCheck);
             }
         }

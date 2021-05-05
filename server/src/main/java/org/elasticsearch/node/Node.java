@@ -814,8 +814,10 @@ public class Node implements Closeable {
         nodeService.getMonitorService().start();
         logger.info("启动组件 MappingUpdatedAction IndicesService IndicesClusterStateService SnapshotsService SnapshotShardsService RepositoriesService SearchService");
 
+        // 获取ClusterService 如果已经注入了实例直接获取，否则就会初始化一个实例
         final ClusterService clusterService = injector.getInstance(ClusterService.class);
 
+        // 获取 NodeConnectionsService 如果已经注入了实例直接获取，否则就会初始化一个实例
         final NodeConnectionsService nodeConnectionsService = injector.getInstance(NodeConnectionsService.class);
         nodeConnectionsService.start();
         clusterService.setNodeConnectionsService(nodeConnectionsService);

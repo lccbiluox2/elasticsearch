@@ -122,6 +122,9 @@ public interface Injector {
      *
      * @throws ConfigurationException if this injector cannot find or create the provider.
      * @throws ProvisionException     if there was a runtime failure while providing an instance.
+     *
+     * 返回给定注入类型的适当实例;等价于{@code getProvider(type).get()}。如果可行，请避免使用此方法，
+     * 以便让Guice提前注入依赖项。
      */
     <T> T getInstance(Class<T> type);
 }
