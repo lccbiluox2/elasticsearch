@@ -286,6 +286,8 @@ public class MetaStateService {
     /**
      * Creates empty cluster state file on disk, deleting global metadata and unreferencing all index metadata
      * (only used for dangling indices at that point).
+     *
+     * 在磁盘上创建空集群状态文件，删除全局元数据并取消引用所有索引元数据(仅用于此时的悬空索引)。
      */
     public void unreferenceAll() throws IOException {
         MANIFEST_FORMAT.writeAndCleanup(Manifest.empty(), nodeEnv.nodeDataPaths()); // write empty file so that indices become unreferenced
@@ -294,11 +296,16 @@ public class MetaStateService {
 
     /**
      * Removes manifest file, global metadata and all index metadata
+     *
+     * 删除清单文件、全局元数据和所有索引元数据
      */
     public void deleteAll() throws IOException {
         // To ensure that the metadata is never reimported by loadFullStateBWC in case where the deletions here fail mid-way through,
         // we first write an empty manifest file so that the indices become unreferenced, then clean up the indices, and only then delete
         // the manifest file.
+        //
+        // 为了确保loadFullStateBWC不会在这里的删除失败的情况下重新导入元数据，我们首先写一个空的清单文件，
+        // 这样索引就不会被引用，然后清理索引，然后才删除清单文件。
         unreferenceAll();
         for (String indexFolderName : nodeEnv.availableIndexFolders()) {
             // delete meta state directories of indices

@@ -112,41 +112,51 @@ public class GatewayMetaState implements Closeable {
         return getPersistedState().getLastAcceptedState().metadata();
     }
 
+
     public void start(Settings settings, TransportService transportService, ClusterService clusterService,
                       MetaStateService metaStateService, MetadataIndexUpgradeService metadataIndexUpgradeService,
                       MetadataUpgrader metadataUpgrader, PersistedClusterStateService persistedClusterStateService) {
         assert persistedState.get() == null : "should only start once, but already have " + persistedState.get();
 
+        // 如果配置 discovery.type 等于  legacy-zen
         if (DiscoveryModule.DISCOVERY_TYPE_SETTING.get(settings).equals(DiscoveryModule.ZEN_DISCOVERY_TYPE)) {
             // only for tests that simulate mixed Zen1/Zen2 clusters, see Zen1IT
             final Tuple<Manifest, Metadata> manifestClusterStateTuple;
             try {
+                // 将给定状态写入给定目录，如果写入成功则执行旧状态文件的清理，如果写入失败则执行新创建状态文件的清理。
                 NodeMetadata.FORMAT.writeAndCleanup(new NodeMetadata(persistedClusterStateService.getNodeId(), Version.CURRENT),
                     persistedClusterStateService.getDataPaths());
                 manifestClusterStateTuple = metaStateService.loadFullState();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+            // 获取集群名称 构造 ClusterState
             final ClusterState clusterState = ClusterState.builder(ClusterName.CLUSTER_NAME_SETTING.get(settings))
                 .version(manifestClusterStateTuple.v1().getClusterStateVersion())
                 .metadata(manifestClusterStateTuple.v2()).build();
 
+            // 跟踪写入磁盘的元数据，允许增量地写入更新的元数据(即只写入更改的元数据)。
             final IncrementalClusterStateWriter incrementalClusterStateWriter
                 = new IncrementalClusterStateWriter(settings, clusterService.getClusterSettings(), metaStateService,
                 manifestClusterStateTuple.v1(),
                 prepareInitialClusterState(transportService, clusterService, clusterState),
                 transportService.getThreadPool()::relativeTimeInMillis);
 
+            // 如果是主节点或者数据节点 设置低的优先级 监控器 TODO：为什么设置低优先级
             if (DiscoveryNode.isMasterNode(settings) || DiscoveryNode.isDataNode(settings)) {
                 clusterService.addLowPriorityApplier(new GatewayClusterApplier(incrementalClusterStateWriter));
             }
+
+            // 设置内存持久化状态
             persistedState.set(new InMemoryPersistedState(manifestClusterStateTuple.v1().getCurrentTerm(), clusterState));
             return;
         }
 
+        // 如果是主节点或者数据节点
         if (DiscoveryNode.isMasterNode(settings) || DiscoveryNode.isDataNode(settings)) {
             try {
-                final PersistedClusterStateService.OnDiskState onDiskState = persistedClusterStateService.loadBestOnDiskState();
+                // 加载磁盘集群的最佳可用状态。如果没有找到这样的状态，则返回 {@link OnDiskState#NO_ON_DISK_STATE}。
+                 final PersistedClusterStateService.OnDiskState onDiskState = persistedClusterStateService.loadBestOnDiskState();
 
                 Metadata metadata = onDiskState.metadata;
                 long lastAcceptedVersion = onDiskState.lastAcceptedVersion;
@@ -172,18 +182,25 @@ public class GatewayMetaState implements Closeable {
                             .metadata(upgradeMetadataForNode(metadata, metadataIndexUpgradeService, metadataUpgrader))
                             .build());
 
+                    // 是否是主节点
                     if (DiscoveryNode.isMasterNode(settings)) {
+                        // 将元数据的增量写入封装为{@link PersistedClusterStateService.Writer}。
                         persistedState = new LucenePersistedState(persistedClusterStateService, currentTerm, clusterState);
                     } else {
+                        // 将元数据的增量异步写入封装为{@link AsyncLucenePersistedState}。 先放在内存中
                         persistedState = new AsyncLucenePersistedState(settings, transportService.getThreadPool(),
                             new LucenePersistedState(persistedClusterStateService, currentTerm, clusterState));
                     }
+                    // 如果是数据节点
                     if (DiscoveryNode.isDataNode(settings)) {
+                        // 不引用遗留文件(仅保留悬空索引功能)
                         metaStateService.unreferenceAll(); // unreference legacy files (only keep them for dangling indices functionality)
                     } else {
+                        // 删除旧文件
                         metaStateService.deleteAll(); // delete legacy files
                     }
                     // write legacy node metadata to prevent accidental downgrades from spawning empty cluster state
+                    // 写入遗留节点元数据，以防止意外降级产生空集群状态
                     NodeMetadata.FORMAT.writeAndCleanup(new NodeMetadata(persistedClusterStateService.getNodeId(), Version.CURRENT),
                         persistedClusterStateService.getDataPaths());
                     success = true;
@@ -475,6 +492,8 @@ public class GatewayMetaState implements Closeable {
 
     /**
      * Encapsulates the incremental writing of metadata to a {@link PersistedClusterStateService.Writer}.
+     *
+     * 将元数据的增量写入封装为{@link PersistedClusterStateService.Writer}。
      */
     static class LucenePersistedState implements PersistedState {
 

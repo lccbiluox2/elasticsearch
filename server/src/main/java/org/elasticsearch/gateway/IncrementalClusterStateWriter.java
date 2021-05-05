@@ -41,6 +41,8 @@ import java.util.function.LongSupplier;
 
 /**
  * Tracks the metadata written to disk, allowing updated metadata to be written incrementally (i.e. only writing out the changed metadata).
+ *
+ * 跟踪写入磁盘的元数据，允许增量地写入更新的元数据(即只写入更改的元数据)。
  */
 public class IncrementalClusterStateWriter {
 

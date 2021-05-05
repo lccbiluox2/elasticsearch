@@ -180,6 +180,8 @@ public abstract class MetadataStateFormat<T> {
      * Writes the given state to the given directories and performs cleanup of old state files if the write succeeds or
      * newly created state file if write fails.
      * See also {@link #write(Object, Path...)} and {@link #cleanupOldFiles(long, Path[])}.
+     *
+     * 将给定状态写入给定目录，如果写入成功则执行旧状态文件的清理，如果写入失败则执行新创建状态文件的清理。
      */
     public final long writeAndCleanup(final T state, final Path... locations) throws WriteStateException {
         return write(state, true, locations);

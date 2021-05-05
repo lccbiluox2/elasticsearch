@@ -227,6 +227,8 @@ public class PersistedClusterStateService {
         // it is possible to disable the use of MMapDirectory for indices, and it may be surprising to users that have done so if we still
         // use a MMapDirectory here, which might happen with FSDirectory.open(path). Concurrency is of no concern here so a
         // SimpleFSDirectory is fine:
+        // 禁用MMapDirectory索引是有可能的，如果我们在这里仍然使用MMapDirectory，用户可能会感到惊讶，
+        // 这可能发生在FSDirectory.open(path)。并发性在这里是无关紧要的，所以SimpleFSDirectory是好的:
         return new SimpleFSDirectory(path);
     }
 
@@ -318,6 +320,8 @@ public class PersistedClusterStateService {
 
     /**
      * Loads the best available on-disk cluster state. Returns {@link OnDiskState#NO_ON_DISK_STATE} if no such state was found.
+     *
+     * 加载磁盘集群的最佳可用状态。如果没有找到这样的状态，则返回{@link OnDiskState#NO_ON_DISK_STATE}。
      */
     public OnDiskState loadBestOnDiskState() throws IOException {
         String committedClusterUuid = null;
@@ -331,15 +335,15 @@ public class PersistedClusterStateService {
         for (final Path dataPath : dataPaths) {
             final Path indexPath = dataPath.resolve(METADATA_DIRECTORY_NAME);
             if (Files.exists(indexPath)) {
-                try (Directory directory = createDirectory(indexPath);
-                     DirectoryReader directoryReader = DirectoryReader.open(directory)) {
-                    final OnDiskState onDiskState = loadOnDiskState(dataPath, directoryReader);
+                try (Directory directory = createDirectory(indexPath); // 创建 SimpleFSDirectory
+                     DirectoryReader directoryReader = DirectoryReader.open(directory)) { // 打开目录
+                    final OnDiskState onDiskState = loadOnDiskState(dataPath, directoryReader); // 从磁盘加载状态
 
                     if (nodeId.equals(onDiskState.nodeId) == false) {
                         throw new IllegalStateException("unexpected node ID in metadata, found [" + onDiskState.nodeId +
                             "] in [" + dataPath + "] but expected [" + nodeId + "]");
                     }
-
+                    // 具有给定集群状态的当前节点是否锁定在具有{@link #clusterUUID()}返回的UUID的集群中，这意味着它将不接受具有不同clusterUUID的任何集群状态。
                     if (onDiskState.metadata.clusterUUIDCommitted()) {
                         if (committedClusterUuid == null) {
                             committedClusterUuid = onDiskState.metadata.clusterUUID();

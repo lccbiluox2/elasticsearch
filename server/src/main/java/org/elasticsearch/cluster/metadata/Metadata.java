@@ -237,6 +237,9 @@ public class Metadata implements Iterable<IndexMetadata>, Diffable<Metadata>, To
     /**
      * Whether the current node with the given cluster state is locked into the cluster with the UUID returned by {@link #clusterUUID()},
      * meaning that it will not accept any cluster state with a different clusterUUID.
+     *
+     * 具有给定集群状态的当前节点是否锁定在具有{@link #clusterUUID()}返回的UUID的集群中，
+     * 这意味着它将不接受具有不同clusterUUID的任何集群状态。
      */
     public boolean clusterUUIDCommitted() {
         return this.clusterUUIDCommitted;
