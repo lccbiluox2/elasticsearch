@@ -546,6 +546,7 @@ public class Coordinator extends AbstractLifecycleComponent implements Discovery
         logger.debug("{}: coordinator becoming CANDIDATE in term {} (was {}, lastKnownLeader was [{}])",
             method, getCurrentTerm(), mode, lastKnownLeader);
 
+        // 如果不是候选者 才进行下一步
         if (mode != Mode.CANDIDATE) {
             final Mode prevMode = mode;
             mode = Mode.CANDIDATE;
@@ -732,6 +733,7 @@ public class Coordinator extends AbstractLifecycleComponent implements Discovery
     @Override
     public void startInitialJoin() {
         synchronized (mutex) {
+            // 成为 候选者
             becomeCandidate("startInitialJoin");
         }
         clusterBootstrapService.scheduleUnconfiguredBootstrap();

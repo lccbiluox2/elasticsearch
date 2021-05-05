@@ -184,24 +184,30 @@ public class Netty4HttpServerTransport extends AbstractHttpServerTransport {
     protected void doStart() {
         boolean success = false;
         try {
+            // 创建 ServerBootstrap
             serverBootstrap = new ServerBootstrap();
 
             serverBootstrap.group(new NioEventLoopGroup(workerCount, daemonThreadFactory(settings,
                 HTTP_SERVER_WORKER_THREAD_NAME_PREFIX)));
 
             // NettyAllocator will return the channel type designed to work with the configuredAllocator
+            // NettyAllocator将返回用于配置dallocator的通道类型
             serverBootstrap.channel(NettyAllocator.getServerChannelType());
 
             // Set the allocators for both the server channel and the child channels created
+            // 为服务器通道和所创建的子通道设置分配器
             serverBootstrap.option(ChannelOption.ALLOCATOR, NettyAllocator.getAllocator());
             serverBootstrap.childOption(ChannelOption.ALLOCATOR, NettyAllocator.getAllocator());
 
+            // 设置 HttpChannelHandler
             serverBootstrap.childHandler(configureServerChannelHandler());
+            // 设置异常捕获
             serverBootstrap.handler(new ServerChannelExceptionHandler(this));
 
             serverBootstrap.childOption(ChannelOption.TCP_NODELAY, SETTING_HTTP_TCP_NO_DELAY.get(settings));
             serverBootstrap.childOption(ChannelOption.SO_KEEPALIVE, SETTING_HTTP_TCP_KEEP_ALIVE.get(settings));
 
+            // 设置连接属性
             if (SETTING_HTTP_TCP_KEEP_ALIVE.get(settings)) {
                 // Netty logs a warning if it can't set the option, so try this only on supported platforms
                 if (IOUtils.LINUX || IOUtils.MAC_OS_X) {
@@ -227,11 +233,13 @@ public class Netty4HttpServerTransport extends AbstractHttpServerTransport {
                 }
             }
 
+            // 设置发送buffer大小
             final ByteSizeValue tcpSendBufferSize = SETTING_HTTP_TCP_SEND_BUFFER_SIZE.get(settings);
             if (tcpSendBufferSize.getBytes() > 0) {
                 serverBootstrap.childOption(ChannelOption.SO_SNDBUF, Math.toIntExact(tcpSendBufferSize.getBytes()));
             }
 
+            // 设置接收buffer大小
             final ByteSizeValue tcpReceiveBufferSize = SETTING_HTTP_TCP_RECEIVE_BUFFER_SIZE.get(settings);
             if (tcpReceiveBufferSize.getBytes() > 0) {
                 serverBootstrap.childOption(ChannelOption.SO_RCVBUF, Math.toIntExact(tcpReceiveBufferSize.getBytes()));
@@ -240,10 +248,12 @@ public class Netty4HttpServerTransport extends AbstractHttpServerTransport {
             serverBootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, recvByteBufAllocator);
             serverBootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, recvByteBufAllocator);
 
+            // 设置 地址
             final boolean reuseAddress = SETTING_HTTP_TCP_REUSE_ADDRESS.get(settings);
             serverBootstrap.option(ChannelOption.SO_REUSEADDR, reuseAddress);
             serverBootstrap.childOption(ChannelOption.SO_REUSEADDR, reuseAddress);
 
+            // 绑定server
             bindServer();
             success = true;
         } finally {

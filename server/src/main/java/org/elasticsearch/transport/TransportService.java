@@ -296,6 +296,8 @@ public class TransportService extends AbstractLifecycleComponent implements Repo
      * start accepting incoming requests.
      * when the transport layer starts up it will block any incoming requests until
      * this method is called
+     *
+     * 开始接受传入请求。当传输层启动时，它将阻塞任何传入请求，直到调用此方法
      */
     public final void acceptIncomingRequests() {
         handleIncomingRequests.set(true);

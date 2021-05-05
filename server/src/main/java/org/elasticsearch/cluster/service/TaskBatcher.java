@@ -40,6 +40,8 @@ import java.util.stream.Collectors;
 /**
  * Batching support for {@link PrioritizedEsThreadPoolExecutor}
  * Tasks that share the same batching key are batched (see {@link BatchedTask#batchingKey})
+ *
+ * 对具有相同批处理键的任务进行批处理(参见{@link BatchedTask#batchingKey})
  */
 public abstract class TaskBatcher {
 
@@ -57,6 +59,7 @@ public abstract class TaskBatcher {
         if (tasks.isEmpty()) {
             return;
         }
+        // 获取第一个任务
         final BatchedTask firstTask = tasks.get(0);
         assert tasks.stream().allMatch(t -> t.batchingKey == firstTask.batchingKey) :
             "tasks submitted in a batch should share the same batching key: " + tasks;
@@ -81,6 +84,7 @@ public abstract class TaskBatcher {
             existingTasks.addAll(tasks);
         }
 
+        // 执行
         if (timeout != null) {
             threadExecutor.execute(firstTask, timeout, () -> onTimeoutInternal(tasks, timeout));
         } else {

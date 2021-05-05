@@ -40,6 +40,8 @@ public class NodeAndClusterIdStateListener implements ClusterStateObserver.Liste
     /**
      * Subscribes for the first cluster state update where nodeId and clusterId is present
      * and sets these values in {@link NodeAndClusterIdConverter}.
+     *
+     * 订阅第一个集群状态更新，其中nodeId和clusterId存在，并将这些值设置在{@link NodeAndClusterIdConverter}中。
      */
     public static void getAndSetNodeIdAndClusterId(ClusterService clusterService, ThreadContext threadContext) {
         ClusterState clusterState = clusterService.state();

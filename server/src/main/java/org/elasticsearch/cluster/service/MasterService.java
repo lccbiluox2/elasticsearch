@@ -179,6 +179,8 @@ public class MasterService extends AbstractLifecycleComponent {
 
     /**
      * The current cluster state exposed by the discovery layer. Package-visible for tests.
+     *
+     * 发现层公开的当前集群状态。Package-visible测试。
      */
     ClusterState state() {
         return clusterStateSupplier.get();
@@ -207,6 +209,7 @@ public class MasterService extends AbstractLifecycleComponent {
         }
 
         logger.debug("executing cluster state update for [{}]", summary);
+        // 获取集群之前的状态
         final ClusterState previousClusterState = state();
 
         if (!previousClusterState.nodes().isLocalNodeElectedMaster() && taskInputs.runOnlyWhenMaster()) {

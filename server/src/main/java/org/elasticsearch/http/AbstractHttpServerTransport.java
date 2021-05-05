@@ -145,6 +145,7 @@ public abstract class AbstractHttpServerTransport extends AbstractLifecycleCompo
         // Bind and start to accept incoming connections.
         InetAddress hostAddresses[];
         try {
+            // 获取地址
             hostAddresses = networkService.resolveBindHostAddresses(bindHosts);
         } catch (IOException e) {
             throw new BindHttpException("Failed to resolve host [" + Arrays.toString(bindHosts) + "]", e);
@@ -155,6 +156,7 @@ public abstract class AbstractHttpServerTransport extends AbstractLifecycleCompo
             boundAddresses.add(bindAddress(address));
         }
 
+        // 设置publish地址
         final InetAddress publishInetAddress;
         try {
             publishInetAddress = networkService.resolvePublishHostAddresses(publishHosts);
@@ -164,6 +166,8 @@ public abstract class AbstractHttpServerTransport extends AbstractLifecycleCompo
 
         final int publishPort = resolvePublishPort(settings, boundAddresses, publishInetAddress);
         TransportAddress publishAddress = new TransportAddress(new InetSocketAddress(publishInetAddress, publishPort));
+
+        // 绑定地址
         this.boundAddress = new BoundTransportAddress(boundAddresses.toArray(new TransportAddress[0]), publishAddress);
         logger.info("{}", boundAddress);
     }

@@ -879,11 +879,15 @@ public class Node implements Closeable {
         clusterService.start();
         assert clusterService.localNode().equals(localNodeFactory.getNode())
             : "clusterService has a different local node than the factory provided";
+
+        // 开始接受传入请求。当传输层启动时，它将阻塞任何传入请求，直到调用此方法 TODO: 可以接受客户端请求了
         transportService.acceptIncomingRequests();
+        // 触发第一个连接周期
         discovery.startInitialJoin();
         final TimeValue initialStateTimeout = DiscoverySettings.INITIAL_STATE_TIMEOUT_SETTING.get(settings());
         configureNodeAndClusterIdStateListener(clusterService);
 
+        // 集群状态校验
         if (initialStateTimeout.millis() > 0) {
             final ThreadPool thread = injector.getInstance(ThreadPool.class);
             ClusterState clusterState = clusterService.state();
