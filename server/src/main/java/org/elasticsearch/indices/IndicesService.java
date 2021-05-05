@@ -1288,6 +1288,7 @@ public class IndicesService extends AbstractLifecycleComponent
         private final ThreadPool threadPool;
         private final TimeValue interval;
         private final AtomicBoolean closed = new AtomicBoolean(false);
+        // 索引请求缓存
         private final IndicesRequestCache requestCache;
 
         CacheCleaner(IndicesFieldDataCache cache,
@@ -1309,6 +1310,7 @@ public class IndicesService extends AbstractLifecycleComponent
                 logger.trace("running periodic field data cache cleanup");
             }
             try {
+                // IndicesField 缓存刷新
                 this.cache.getCache().refresh();
             } catch (Exception e) {
                 logger.warn("Exception during periodic field data cache cleanup:", e);
@@ -1319,6 +1321,7 @@ public class IndicesService extends AbstractLifecycleComponent
             }
 
             try {
+                // 清理索引请求缓存
                 this.requestCache.cleanCache();
             } catch (Exception e) {
                 logger.warn("Exception during periodic request cache cleanup:", e);

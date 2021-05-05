@@ -68,6 +68,8 @@ import static org.elasticsearch.xpack.core.ccr.AutoFollowStats.AutoFollowedClust
 /**
  * A component that runs only on the elected master node and follows leader indices automatically
  * if they match with a auto follow pattern that is defined in {@link AutoFollowMetadata}.
+ *
+ * 该组件只运行在选定的主节点上，如果leader索引与{@link AutoFollowMetadata}中定义的自动跟踪模式匹配，则会自动跟踪leader索引。
  */
 public class AutoFollowCoordinator extends AbstractLifecycleComponent implements ClusterStateListener {
 

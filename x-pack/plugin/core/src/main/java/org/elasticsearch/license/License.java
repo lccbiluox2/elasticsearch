@@ -174,6 +174,8 @@ public class License implements ToXContentObject {
      * Note: The mode indicates features that should be made available, but it does not indicate whether the license is active!
      * <p>
      * The id byte is used for ordering operation modes
+     *
+     * 将license的操作模式与license类型值解耦。
      */
     public enum OperationMode {
         MISSING((byte) 0),

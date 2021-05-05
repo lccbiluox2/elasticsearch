@@ -528,10 +528,12 @@ public class LocalExporter extends Exporter implements ClusterStateListener, Cle
                 final boolean cleanUpWatcherHistory = clusterService.getClusterSettings().get(CLEAN_WATCHER_HISTORY);
 
                 // list of index patterns that we clean up; watcher history can be included
+                // 正则获取我们需要的监控索引
                 final String[] indexPatterns =
                         cleanUpWatcherHistory ? new String[] { ".monitoring-*", ".watcher-history*" } : new String[] { ".monitoring-*" };
 
                 // Get the names of the current monitoring indices
+                // 获取当前监控索引的名称 因为监控索引一般都有时间，所以我们需要获取每种类型的具体哪个当前使用的
                 final Set<String> currents = MonitoredSystem.allSystems()
                                                     .map(s -> MonitoringTemplateUtils.indexName(dateTimeFormatter, s, currentTimeMillis))
                                                     .collect(Collectors.toSet());
@@ -543,13 +545,16 @@ public class LocalExporter extends Exporter implements ClusterStateListener, Cle
                 for (ObjectObjectCursor<String, IndexMetadata> index : clusterState.getMetadata().indices()) {
                     String indexName =  index.key;
 
+                    // 进行正则匹配
                     if (Regex.simpleMatch(indexPatterns, indexName)) {
                         // Never delete any "current" index (e.g., today's index or the most recent version no timestamp, like alerts)
+                        // 永远不要删除任何“当前”索引(例如，今天的索引或没有时间戳的最新版本，如警报)
                         if (currents.contains(indexName)) {
                             continue;
                         }
 
                         long creationDate = index.value.getCreationDate();
+                        // 如果过期时间超过当前时间
                         if (creationDate <= expirationTimeMillis) {
                             if (logger.isDebugEnabled()) {
                                 logger.debug("detected expired index [name={}, created={}, expired={}]",
@@ -562,6 +567,7 @@ public class LocalExporter extends Exporter implements ClusterStateListener, Cle
 
                 if (!indices.isEmpty()) {
                     logger.info("cleaning up [{}] old indices", indices.size());
+                    // 如果有过期的索引，那么进行删除
                     deleteIndices(indices);
                 } else {
                     logger.debug("no old indices found for clean up");
@@ -572,7 +578,9 @@ public class LocalExporter extends Exporter implements ClusterStateListener, Cle
 
     private void deleteIndices(Set<String> indices) {
         logger.trace("deleting {} indices: [{}]", indices.size(), collectionToCommaDelimitedString(indices));
+        // 构建删除索引请求
         final DeleteIndexRequest request = new DeleteIndexRequest(indices.toArray(new String[indices.size()]));
+        // 执行发送
         executeAsyncWithOrigin(client.threadPool().getThreadContext(), MONITORING_ORIGIN, request,
                 new ActionListener<AcknowledgedResponse>() {
                     @Override

@@ -26,6 +26,8 @@ public final class MonitoringField {
      * </ul>
      *
      * @see MonitoringField#HISTORY_DURATION_MINIMUM
+     *
+     * 监控历史数据的默认保留时间。
      */
     public static final Setting<TimeValue> HISTORY_DURATION = timeSetting("xpack.monitoring.history.duration",
                                                       TimeValue.timeValueHours(7 * 24), // default value (7 days)

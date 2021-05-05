@@ -154,7 +154,7 @@ public class Exporters extends AbstractLifecycleComponent {
         //
         // NOTE:    if there are exporters configured and they're all disabled, we don't
         //          fallback on the default
-        //
+        //  如果没有配置 那么我们就自己创建一个 org.elasticsearch.xpack.monitoring.exporter.local.LocalExporter
         if (exporters.isEmpty() && !hasDisabled) {
             Exporter.Config config =
                     new Exporter.Config("default_" + LocalExporter.TYPE, LocalExporter.TYPE, settings, clusterService, licenseState);

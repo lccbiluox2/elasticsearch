@@ -27,6 +27,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * {@code CleanerService} takes care of deleting old monitoring indices.
+ *
+ * CleanerService 负责删除旧的监控索引。
  */
 public class CleanerService extends AbstractLifecycleComponent {
     private static final Logger logger = LogManager.getLogger(CleanerService.class);
@@ -45,6 +47,7 @@ public class CleanerService extends AbstractLifecycleComponent {
         this.threadPool = threadPool;
         this.executionScheduler = executionScheduler;
         this.globalRetention = MonitoringField.HISTORY_DURATION.get(settings);
+        // 创建一个定时任务 定时清理
         this.runnable = new IndicesCleaner();
 
         // the validation is performed by the setting's object itself
@@ -86,6 +89,9 @@ public class CleanerService extends AbstractLifecycleComponent {
      * <p>
      * This will ignore the global retention if the license does not allow retention updates.
      *
+     * 获得可用的留存率。
+     * 如果许可证不允许保留更新，这将忽略全局保留。
+     *
      * @return Never {@code null}
      * @see XPackLicenseState.Feature#MONITORING_UPDATE_RETENTION
      */
@@ -95,6 +101,7 @@ public class CleanerService extends AbstractLifecycleComponent {
             return globalRetention;
         }
         else {
+            // 监控历史数据的默认保留时间。 默认7天
             return MonitoringField.HISTORY_DURATION.getDefault(Settings.EMPTY);
         }
     }
@@ -152,6 +159,8 @@ public class CleanerService extends AbstractLifecycleComponent {
     /**
      * {@code IndicesCleaner} runs and reschedules itself in order to automatically clean (delete) indices that are outside of the
      * {@link #getRetention() retention} period.
+     *
+     * {@code IndicesCleaner}运行并重新调度自己，以便自动清除(删除)在{@link #getRetention() retention )保留期之外的索引。
      */
     class IndicesCleaner extends AbstractLifecycleRunnable {
 
@@ -172,11 +181,13 @@ public class CleanerService extends AbstractLifecycleComponent {
             }
 
             // fetch the retention, which is depends on a bunch of rules
+            // 获取留存率，这取决于很多规则   // 监控历史数据的默认保留时间。 默认7天
             TimeValue retention = getRetention();
 
             logger.trace("cleaning up indices with retention [{}]", retention);
 
             // Note: listeners are free to override the retention
+            // 注意:监听器可以自由地覆盖保留
             for (Listener listener : listeners) {
                 try {
                     listener.onCleanUpIndices(retention);

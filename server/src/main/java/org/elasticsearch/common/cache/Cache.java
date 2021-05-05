@@ -567,10 +567,14 @@ public class Cache<K, V> {
 
     /**
      * Force any outstanding size-based and time-based evictions to occur
+     *
+     * 强制发生任何未完成的基于大小和基于时间的清除
      */
     public void refresh() {
         long now = now();
+        // 获取锁
         try (ReleasableLock ignored = lruLock.acquire()) {
+            // 如果获取到，那么驱逐缓存
             evict(now);
         }
     }
@@ -751,6 +755,7 @@ public class Cache<K, V> {
         assert lruLock.isHeldByCurrentThread();
 
         while (tail != null && shouldPrune(tail, now)) {
+            // 驱除实体
             evictEntry(tail);
         }
     }
@@ -760,14 +765,17 @@ public class Cache<K, V> {
 
         CacheSegment<K, V> segment = getCacheSegment(entry.key);
         if (segment != null) {
+            // 段驱除
             segment.remove(entry.key, entry.value, f -> {});
         }
+        // 删除
         delete(entry, RemovalNotification.RemovalReason.EVICTED);
     }
 
     private void delete(Entry<K, V> entry, RemovalNotification.RemovalReason removalReason) {
         assert lruLock.isHeldByCurrentThread();
 
+        // 从链表中去掉
         if (unlink(entry)) {
             removalListener.onRemoval(new RemovalNotification<>(entry.key, entry.value, removalReason));
         }
