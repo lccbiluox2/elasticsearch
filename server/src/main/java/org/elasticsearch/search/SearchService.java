@@ -302,6 +302,7 @@ public class SearchService extends AbstractLifecycleComponent implements IndexEv
 
     @Override
     protected void doStart() {
+        logger.info("es SearchService 启动方法 什么都不做");
     }
 
     @Override

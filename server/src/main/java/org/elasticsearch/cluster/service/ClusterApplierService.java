@@ -88,6 +88,8 @@ public class ClusterApplierService extends AbstractLifecycleComponent implements
 
     /**
      * Those 3 state listeners are changing infrequently - CopyOnWriteArrayList is just fine
+     *
+     * 3级的状态监听器
      */
     private final Collection<ClusterStateApplier> highPriorityStateAppliers = new CopyOnWriteArrayList<>();
     private final Collection<ClusterStateApplier> normalPriorityStateAppliers = new CopyOnWriteArrayList<>();
