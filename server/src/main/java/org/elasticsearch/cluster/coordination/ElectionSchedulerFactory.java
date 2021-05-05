@@ -43,6 +43,11 @@ import java.util.concurrent.atomic.AtomicLong;
  * randomly at reasonably high frequency and backing off (linearly) until one of them succeeds. We also place an upper bound on the backoff
  * so that if elections are failing due to a network partition that lasts for a long time then when the partition heals there is an election
  * attempt reasonably quickly.
+ *
+ * 可以证明，任何leader选举算法都不可能选举出一个leader，但是与向另一个节点发送消息并接收响应所需的时间相比，
+ * 只要选举发生的频率足够低，它们通常都能工作(随着时间的推移，概率接近1)。我们不知道这里的往返延迟，
+ * 但我们可以通过尝试以合理的高频率随机选举和后退(线性)直到其中一个成功来近似它。我们还对退步设置了上限，
+ * 以便如果选举由于网络分区持续了很长时间而失败，那么当分区愈合后，就会有一个合理快速的选举尝试。
  */
 public class ElectionSchedulerFactory {
 
@@ -103,6 +108,8 @@ public class ElectionSchedulerFactory {
 
     /**
      * Start the process to schedule repeated election attempts.
+     *
+     * 启动程序，安排多次选举尝试。
      *
      * @param gracePeriod       An initial period to wait before attempting the first election.
      * @param scheduledRunnable The action to run each time an election should be attempted.

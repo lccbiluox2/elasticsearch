@@ -43,6 +43,9 @@ import static org.elasticsearch.common.util.concurrent.ConcurrentCollections.new
  * A publication can succeed and complete before all nodes have applied the published state and acknowledged it; however we need every node
  * eventually either to apply the published state (or a later state) or be removed from the cluster. This component achieves this by
  * removing any lagging nodes from the cluster after a timeout.
+ *
+ * 发布可以在所有节点应用发布状态并确认之前成功并完成;然而，我们需要每个节点最终要么应用发布状态(或以后的状态)，
+ * 要么从集群中删除。该组件通过在超时后从集群中删除任何滞后的节点来实现这一点。
  */
 public class LagDetector {
 

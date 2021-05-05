@@ -844,7 +844,7 @@ public class Node implements Closeable {
         gatewayMetaState.start(settings(), transportService, clusterService, injector.getInstance(MetaStateService.class),
             injector.getInstance(MetadataIndexUpgradeService.class), injector.getInstance(MetadataUpgrader.class),
             injector.getInstance(PersistedClusterStateService.class));
-        if (Assertions.ENABLED) {
+        if (Assertions.ENABLED) { // 默认是false
             try {
                 if (DiscoveryModule.DISCOVERY_TYPE_SETTING.get(environment.settings()).equals(
                     DiscoveryModule.ZEN_DISCOVERY_TYPE) == false) {
@@ -861,8 +861,12 @@ public class Node implements Closeable {
         }
         // we load the global state here (the persistent part of the cluster state stored on disk) to
         // pass it to the bootstrap checks to allow plugins to enforce certain preconditions based on the recovered state.
+        //
+        // 我们在这里加载全局状态(存储在磁盘上的集群状态的持久部分)，将其传递给引导检查，以允许插件根据恢复的状态强制执行某些先决条件。
         final Metadata onDiskMetadata = gatewayMetaState.getPersistedState().getLastAcceptedState().metadata();
         assert onDiskMetadata != null : "metadata is null but shouldn't"; // this is never null
+
+        // 钩子用于在网络服务启动之后、集群服务启动之前以及网络服务开始接受传入的网络请求之前验证节点。
         validateNodeBeforeAcceptingRequests(new BootstrapContext(environment, onDiskMetadata), transportService.boundAddress(),
             pluginsService.filterPlugins(Plugin.class).stream()
                 .flatMap(p -> p.getBootstrapChecks().stream()).collect(Collectors.toList()));
@@ -1088,6 +1092,8 @@ public class Node implements Closeable {
      * services are started but before the cluster service is started
      * and before the network service starts accepting incoming network
      * requests.
+     *
+     * 钩子用于在网络服务启动之后、集群服务启动之前以及网络服务开始接受传入的网络请求之前验证节点。
      *
      * @param context               the bootstrap context for this node
      * @param boundTransportAddress the network addresses the node is
