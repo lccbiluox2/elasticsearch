@@ -933,6 +933,7 @@ public class Node implements Closeable {
 
         logger.info("started");
 
+        // 在node启动的时候调用插件的onNodeStarted方法做一些操作
         pluginsService.filterPlugins(ClusterPlugin.class).forEach(ClusterPlugin::onNodeStarted);
 
         return this;
@@ -1109,7 +1110,9 @@ public class Node implements Closeable {
         final BoundTransportAddress boundTransportAddress, List<BootstrapCheck> bootstrapChecks) throws NodeValidationException {
     }
 
-    /** Writes a file to the logs dir containing the ports for the given transport type */
+    /** Writes a file to the logs dir containing the ports for the given transport type
+     * 将包含给定传输类型的端口的文件写入日志目录
+     * */
     private void writePortsFile(String type, BoundTransportAddress boundAddress) {
         Path tmpPortsFile = environment.logsFile().resolve(type + ".ports.tmp");
         try (BufferedWriter writer = Files.newBufferedWriter(tmpPortsFile, Charset.forName("UTF-8"))) {
