@@ -98,8 +98,11 @@ public final class NetworkService {
      *                  such as _local_ (see the documentation). if it is null, it will fall back to _local_
      *
      * @return unique set of internet addresses
+     *
+     * 将{@code bindHosts}解析为一个internet地址列表。该名单不会包含重复的地址。
      */
     public InetAddress[] resolveBindHostAddresses(String bindHosts[]) throws IOException {
+        // 如果什么都没有配置，那么默认是local
         if (bindHosts == null || bindHosts.length == 0) {
             for (CustomNameResolver customNameResolver : customNameResolvers) {
                 InetAddress addresses[] = customNameResolver.resolveDefault();
@@ -186,7 +189,9 @@ public final class NetworkService {
         return addresses[0];
     }
 
-    /** resolves (and deduplicates) host specification */
+    /** resolves (and deduplicates) host specification
+     *  根据主机名 解析地址
+     * */
     private InetAddress[] resolveInetAddresses(String hosts[]) throws IOException {
         if (hosts.length == 0) {
             throw new IllegalArgumentException("empty host specification");
@@ -200,9 +205,13 @@ public final class NetworkService {
         return set.toArray(new InetAddress[set.size()]);
     }
 
-    /** resolves a single host specification */
+    /** resolves a single host specification
+     *  解析一个主机名
+     * */
     private InetAddress[] resolveInternal(String host) throws IOException {
+        // 如果是自定义 或者内置的主机名
         if ((host.startsWith("#") && host.endsWith("#")) || (host.startsWith("_") && host.endsWith("_"))) {
+            // 去掉特殊加入的字符串
             host = host.substring(1, host.length() - 1);
             // next check any registered custom resolvers if any
             if (customNameResolvers != null) {

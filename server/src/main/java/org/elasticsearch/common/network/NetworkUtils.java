@@ -124,9 +124,13 @@ public abstract class NetworkUtils {
         });
     }
     
-    /** Return all interfaces (and subinterfaces) on the system */
+    /** Return all interfaces (and subinterfaces) on the system
+     * 返回系统上的所有接口(和子接口)
+     * */
     static List<NetworkInterface> getInterfaces() throws SocketException {
         List<NetworkInterface> all = new ArrayList<>();
+        // 回机器上所有网络接口的{@code Enumeration}。{@code Enumeration}包含至少一个元素，
+        // 可能表示只支持本机实体之间通信的环回接口。
         addAllInterfaces(all, Collections.list(NetworkInterface.getNetworkInterfaces()));
         Collections.sort(all, new Comparator<NetworkInterface>() {
             @Override
@@ -153,6 +157,7 @@ public abstract class NetworkUtils {
     }
 
     private static InetAddress[] filterAllAddresses(final Predicate<InetAddress> predicate, final String message) throws IOException {
+        // 返回系统上的所有接口(和子接口)
         final List<NetworkInterface> interfaces = getInterfaces();
         final List<InetAddress> list = new ArrayList<>();
         for (final NetworkInterface intf : interfaces) {
@@ -180,7 +185,9 @@ public abstract class NetworkUtils {
         }
     }
 
-    /** Returns all interface-local scope (loopback) addresses for interfaces that are up. */
+    /** Returns all interface-local scope (loopback) addresses for interfaces that are up.
+     * 返回所有up接口的接口-本地范围(环回)地址。
+     * */
     static InetAddress[] getLoopbackAddresses() throws IOException {
         return filterAllAddresses(InetAddress::isLoopbackAddress, "no up-and-running loopback addresses found");
     }

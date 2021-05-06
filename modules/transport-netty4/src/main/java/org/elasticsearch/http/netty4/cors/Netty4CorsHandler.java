@@ -45,6 +45,9 @@ import java.util.stream.Collectors;
  * This handler can be configured using a {@link CorsHandler.Config}, please
  * refer to this class for details about the configuration options available.
  *
+ * 处理Cross Origin Resource Sharing (CORS)请求。
+ *
+ * 这个处理程序可以使用{@link CorsHandler.Config}，关于可用的配置选项，请参考这个类。
  */
 public class Netty4CorsHandler extends ChannelDuplexHandler {
 

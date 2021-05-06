@@ -191,21 +191,21 @@ public class Netty4HttpServerTransport extends AbstractHttpServerTransport {
                 HTTP_SERVER_WORKER_THREAD_NAME_PREFIX)));
 
             // NettyAllocator will return the channel type designed to work with the configuredAllocator
-            // NettyAllocator将返回用于配置dallocator的通道类型
+            // NettyAllocator将返回用于配置dallocator的通道类型  默认的channel 类型是 org.elasticsearch.transport.CopyBytesServerSocketChannel
             serverBootstrap.channel(NettyAllocator.getServerChannelType());
 
             // Set the allocators for both the server channel and the child channels created
             // 为服务器通道和所创建的子通道设置分配器
-            serverBootstrap.option(ChannelOption.ALLOCATOR, NettyAllocator.getAllocator());
-            serverBootstrap.childOption(ChannelOption.ALLOCATOR, NettyAllocator.getAllocator());
+            serverBootstrap.option(ChannelOption.ALLOCATOR, NettyAllocator.getAllocator()); // io.netty.buffer.PooledByteBufAllocator
+            serverBootstrap.childOption(ChannelOption.ALLOCATOR, NettyAllocator.getAllocator());// io.netty.buffer.PooledByteBufAllocator
 
             // 设置 HttpChannelHandler
             serverBootstrap.childHandler(configureServerChannelHandler());
             // 设置异常捕获
             serverBootstrap.handler(new ServerChannelExceptionHandler(this));
 
-            serverBootstrap.childOption(ChannelOption.TCP_NODELAY, SETTING_HTTP_TCP_NO_DELAY.get(settings));
-            serverBootstrap.childOption(ChannelOption.SO_KEEPALIVE, SETTING_HTTP_TCP_KEEP_ALIVE.get(settings));
+            serverBootstrap.childOption(ChannelOption.TCP_NODELAY, SETTING_HTTP_TCP_NO_DELAY.get(settings)); // 默认为true
+            serverBootstrap.childOption(ChannelOption.SO_KEEPALIVE, SETTING_HTTP_TCP_KEEP_ALIVE.get(settings));// 默认为true
 
             // 设置连接属性
             if (SETTING_HTTP_TCP_KEEP_ALIVE.get(settings)) {
@@ -233,13 +233,13 @@ public class Netty4HttpServerTransport extends AbstractHttpServerTransport {
                 }
             }
 
-            // 设置发送buffer大小
+            // 设置发送buffer大小 默认-1b
             final ByteSizeValue tcpSendBufferSize = SETTING_HTTP_TCP_SEND_BUFFER_SIZE.get(settings);
             if (tcpSendBufferSize.getBytes() > 0) {
                 serverBootstrap.childOption(ChannelOption.SO_SNDBUF, Math.toIntExact(tcpSendBufferSize.getBytes()));
             }
 
-            // 设置接收buffer大小
+            // 设置接收buffer大小  默认-1b
             final ByteSizeValue tcpReceiveBufferSize = SETTING_HTTP_TCP_RECEIVE_BUFFER_SIZE.get(settings);
             if (tcpReceiveBufferSize.getBytes() > 0) {
                 serverBootstrap.childOption(ChannelOption.SO_RCVBUF, Math.toIntExact(tcpReceiveBufferSize.getBytes()));
@@ -312,24 +312,31 @@ public class Netty4HttpServerTransport extends AbstractHttpServerTransport {
         protected void initChannel(Channel ch) throws Exception {
             Netty4HttpChannel nettyHttpChannel = new Netty4HttpChannel(ch);
             ch.attr(HTTP_CHANNEL_KEY).set(nettyHttpChannel);
+            // 添加读取超时时间
             ch.pipeline().addLast("read_timeout", new ReadTimeoutHandler(transport.readTimeoutMillis, TimeUnit.MILLISECONDS));
+            // http 请求解密
             final HttpRequestDecoder decoder = new HttpRequestDecoder(
                 handlingSettings.getMaxInitialLineLength(),
                 handlingSettings.getMaxHeaderSize(),
                 handlingSettings.getMaxChunkSize());
             decoder.setCumulator(ByteToMessageDecoder.COMPOSITE_CUMULATOR);
             ch.pipeline().addLast("decoder", decoder);
+            // 添加http内容解压器
             ch.pipeline().addLast("decoder_compress", new HttpContentDecompressor());
+            // 添加http response 编码器
             ch.pipeline().addLast("encoder", new HttpResponseEncoder());
             final HttpObjectAggregator aggregator = new HttpObjectAggregator(handlingSettings.getMaxContentLength());
             aggregator.setMaxCumulationBufferComponents(transport.maxCompositeBufferComponents);
             ch.pipeline().addLast("aggregator", aggregator);
             if (handlingSettings.isCompression()) {
+                // 添加http 内容压缩器
                 ch.pipeline().addLast("encoder_compress", new HttpContentCompressor(handlingSettings.getCompressionLevel()));
             }
             if (handlingSettings.isCorsEnabled()) {
+                // 添加跨域请求
                 ch.pipeline().addLast("cors", new Netty4CorsHandler(transport.corsConfig));
             }
+            // 实现HTTP管道排序，确保响应完全按照其对应的请求的顺序服务。
             ch.pipeline().addLast("pipelining", new Netty4HttpPipeliningHandler(logger, transport.pipeliningMaxEvents));
             ch.pipeline().addLast("handler", requestHandler);
             transport.serverAcceptedChannel(nettyHttpChannel);
