@@ -69,6 +69,9 @@ public class InternalClusterInfoService implements ClusterInfoService, LocalNode
 
     private static final Logger logger = LogManager.getLogger(InternalClusterInfoService.class);
 
+    /**
+     * Elasticsearch应该多久检查一次群集中每个节点的磁盘使用情况。 默认为30秒。
+     */
     public static final Setting<TimeValue> INTERNAL_CLUSTER_INFO_UPDATE_INTERVAL_SETTING =
         Setting.timeSetting("cluster.info.update.interval", TimeValue.timeValueSeconds(30), TimeValue.timeValueSeconds(10),
             Property.Dynamic, Property.NodeScope);

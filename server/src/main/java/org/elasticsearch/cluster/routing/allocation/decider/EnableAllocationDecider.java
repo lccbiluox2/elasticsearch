@@ -62,6 +62,13 @@ public class EnableAllocationDecider extends AllocationDecider {
 
     public static final String NAME = "enable";
 
+    /**
+     * 目的：启用或禁用特定种类的分片的分配。
+     * all - （默认值）允许为所有类型的分片分配分片。
+     * primaries - 仅允许分配主分片的分片。
+     * new_primaries -仅允许为新索引的主分片分配分片。
+     * none - 任何索引都不允许任何类型的分配分片。
+     */
     public static final Setting<Allocation> CLUSTER_ROUTING_ALLOCATION_ENABLE_SETTING =
         new Setting<>("cluster.routing.allocation.enable", Allocation.ALL.toString(), Allocation::parse,
             Property.Dynamic, Property.NodeScope);
@@ -69,6 +76,11 @@ public class EnableAllocationDecider extends AllocationDecider {
         new Setting<>("index.routing.allocation.enable", Allocation.ALL.toString(), Allocation::parse,
             Property.Dynamic, Property.IndexScope);
 
+    /**
+     * 目的：为特定类型的分片启用或禁用重新平衡。
+     * 允许控制群集范围内允许的并发分片重新平衡数。默认为2.请注意，此设置仅控制由于群集中的不平衡而导致的并发分片
+     * 重定位数。此设置不会因分配过滤或强制感知而限制分片重定位。
+     */
     public static final Setting<Rebalance> CLUSTER_ROUTING_REBALANCE_ENABLE_SETTING =
         new Setting<>("cluster.routing.rebalance.enable", Rebalance.ALL.toString(), Rebalance::parse,
             Property.Dynamic, Property.NodeScope);

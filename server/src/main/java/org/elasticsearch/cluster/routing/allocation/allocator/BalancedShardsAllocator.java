@@ -83,10 +83,20 @@ public class BalancedShardsAllocator implements ShardsAllocator {
 
     private static final Logger logger = LogManager.getLogger(BalancedShardsAllocator.class);
 
+    /**
+     * 目的：定义在特定节点（float）上分配的每个索引的分片数量的权重因子。默认为0.55f。提高这一点会增加在
+     * 集群中所有节点上均衡每个索引的分片数的趋势。
+     */
     public static final Setting<Float> INDEX_BALANCE_FACTOR_SETTING =
         Setting.floatSetting("cluster.routing.allocation.balance.index", 0.55f, 0.0f, Property.Dynamic, Property.NodeScope);
+    /**
+     * 目的：定义节点（float）上分配的分片总数的权重因子。默认为0.45f。提高这一点会增加均衡群集中所有节点的分片数量的趋势。
+     */
     public static final Setting<Float> SHARD_BALANCE_FACTOR_SETTING =
         Setting.floatSetting("cluster.routing.allocation.balance.shard", 0.45f, 0.0f, Property.Dynamic, Property.NodeScope);
+    /**
+     * 目的：应执行的操作的最小优化值（非负浮点数）。默认为1.0f。提高此选项将导致群集在优化分片平衡方面不那么积极。
+     */
     public static final Setting<Float> THRESHOLD_SETTING =
         Setting.floatSetting("cluster.routing.allocation.balance.threshold", 1.0f, 0.0f,
             Property.Dynamic, Property.NodeScope);

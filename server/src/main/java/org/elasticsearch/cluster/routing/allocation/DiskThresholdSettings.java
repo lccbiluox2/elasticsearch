@@ -41,16 +41,32 @@ public class DiskThresholdSettings {
     public static final Setting<Boolean> CLUSTER_ROUTING_ALLOCATION_DISK_THRESHOLD_ENABLED_SETTING =
         Setting.boolSetting("cluster.routing.allocation.disk.threshold_enabled", true,
             Setting.Property.Dynamic, Setting.Property.NodeScope);
+    /**
+     * 低警戒水位线——默认为磁盘容量的85％。
+     * Elasticsearch不会将分片分配给使用磁盘超过85％的节点。它也可以设置为绝对字节值（如500mb），
+     * 以防止Elasticsearch在小于指定的可用空间量时分配分片。此设置不会影响新创建的索引的主分片，
+     * 或者特别是之前任何从未分配过的分片。
+     */
     public static final Setting<String> CLUSTER_ROUTING_ALLOCATION_LOW_DISK_WATERMARK_SETTING =
         new Setting<>("cluster.routing.allocation.disk.watermark.low", "85%",
             (s) -> validWatermarkSetting(s, "cluster.routing.allocation.disk.watermark.low"),
             new LowDiskWatermarkValidator(),
             Setting.Property.Dynamic, Setting.Property.NodeScope);
+    /**
+     * 高警戒水位线——默认为磁盘容量的90％。
+     * Elasticsearch将尝试从磁盘使用率超过90％的节点重新分配分片。它也可以设置为绝对字节值，以便在节点
+     * 小于指定的可用空间量时将其从节点重新分配。此设置会影响所有分片的分配，无论先前是否分配。
+     */
     public static final Setting<String> CLUSTER_ROUTING_ALLOCATION_HIGH_DISK_WATERMARK_SETTING =
         new Setting<>("cluster.routing.allocation.disk.watermark.high", "90%",
             (s) -> validWatermarkSetting(s, "cluster.routing.allocation.disk.watermark.high"),
             new HighDiskWatermarkValidator(),
             Setting.Property.Dynamic, Setting.Property.NodeScope);
+    /**
+     * 洪水警戒水位线——默认为磁盘容量的95％。
+     * Elasticsearch对每个索引强制执行只读索引块（index.blocks.read_only_allow_delete）。
+     * 这是防止节点耗尽磁盘空间的最后手段。一旦有足够的可用磁盘空间允许索引操作继续，就必须手动释放索引块。
+     */
     public static final Setting<String> CLUSTER_ROUTING_ALLOCATION_DISK_FLOOD_STAGE_WATERMARK_SETTING =
         new Setting<>("cluster.routing.allocation.disk.watermark.flood_stage", "95%",
             (s) -> validWatermarkSetting(s, "cluster.routing.allocation.disk.watermark.flood_stage"),
