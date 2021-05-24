@@ -48,6 +48,10 @@ import java.util.function.Function;
  * the latest updated settings instance. Classes that need to listen to settings updates can register
  * a settings consumer at index creation via {@link IndexModule#addSettingsUpdateConsumer(Setting, Consumer)} that will
  * be called for each settings update.
+ *
+ * 该类封装所有索引级别设置并处理设置更新。它为每个索引创建，并对所有索引级类可用，并允许它们检索最新更新的设置实例。
+ * 需要监听设置更新的类可以在索引创建时通过{@link IndexModule#addSettingsUpdateConsumer(Setting, Consumer)}
+ * 注册一个设置消费者，每次更新设置时都会调用这个设置消费者。
  */
 public final class IndexSettings {
     public static final Setting<List<String>> DEFAULT_FIELD_SETTING =
@@ -67,6 +71,11 @@ public final class IndexSettings {
     public static final Setting<TimeValue> INDEX_SEARCH_IDLE_AFTER =
         Setting.timeSetting("index.search.idle.after", TimeValue.timeValueSeconds(30),
             TimeValue.timeValueMinutes(0), Property.IndexScope, Property.Dynamic);
+    /**
+     * 调整您的translog设置：在2.0版本中，弹性搜索将在每次请求之后将translog数据刷新到磁盘，从而在硬件故障
+     * 时降低数据丢失的风险。如果希望将索引性能优先于潜在的数据丢失，可以更改index.translog.durability为async。
+     * 有了这一点，索引将在sync_interval上提交对磁盘的写操作，而不是在每个请求之后，从而使更多的资源可以用于索引请求。
+     */
     public static final Setting<Translog.Durability> INDEX_TRANSLOG_DURABILITY_SETTING =
         new Setting<>("index.translog.durability", Translog.Durability.REQUEST.name(),
             (value) -> Translog.Durability.valueOf(value.toUpperCase(Locale.ROOT)), Property.Dynamic, Property.IndexScope);

@@ -32,6 +32,10 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
  * A flush request to flush one or more indices. The flush process of an index basically frees memory from the index
  * by flushing data to the index storage and clearing the internal transaction log. By default, Elasticsearch uses
  * memory heuristics in order to automatically trigger flush operations as required in order to clear memory.
+ *
+ * 刷新一个或多个索引的刷新请求。索引的刷新过程通过将数据刷新到索引存储并清除内部事务日志来从索引中释放内存。
+ * 在默认情况下，Elasticsearch使用内存启发式来根据需要自动触发刷新操作，以便清除内存。
+ *
  * <p>
  * Best created with {@link org.elasticsearch.client.Requests#flushRequest(String...)}.
  *
