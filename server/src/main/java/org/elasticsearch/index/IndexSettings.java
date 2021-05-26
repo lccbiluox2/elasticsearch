@@ -81,6 +81,7 @@ public final class IndexSettings {
      * index.translog.durability: request
      *
      * 这是影响 es 写入速度的最大因素.但是只有这样,写操作才有可能是可靠的,原因参考写入流程.
+     *
      */
     public static final Setting<Translog.Durability> INDEX_TRANSLOG_DURABILITY_SETTING =
         new Setting<>("index.translog.durability", Translog.Durability.REQUEST.name(),
