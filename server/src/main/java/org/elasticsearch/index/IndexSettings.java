@@ -75,6 +75,12 @@ public final class IndexSettings {
      * 调整您的translog设置：在2.0版本中，弹性搜索将在每次请求之后将translog数据刷新到磁盘，从而在硬件故障
      * 时降低数据丢失的风险。如果希望将索引性能优先于潜在的数据丢失，可以更改index.translog.durability为async。
      * 有了这一点，索引将在sync_interval上提交对磁盘的写操作，而不是在每个请求之后，从而使更多的资源可以用于索引请求。
+     *
+     * 从 es 2.x 开始, 默认设置下,translog 的持久化策略为:每个请求都flush.对应配置项为:
+     *
+     * index.translog.durability: request
+     *
+     * 这是影响 es 写入速度的最大因素.但是只有这样,写操作才有可能是可靠的,原因参考写入流程.
      */
     public static final Setting<Translog.Durability> INDEX_TRANSLOG_DURABILITY_SETTING =
         new Setting<>("index.translog.durability", Translog.Durability.REQUEST.name(),
