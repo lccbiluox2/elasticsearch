@@ -19,6 +19,7 @@
 
 package org.elasticsearch.monitor.jvm;
 
+import jdk.jfr.Threshold;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
@@ -218,6 +219,9 @@ public class JvmGcMonitorService extends AbstractLifecycleComponent {
         }, interval, Names.SAME);
     }
 
+    /**
+     * 日志相关请参考：https://blog.csdn.net/qq_21383435/article/details/117637222
+     */
     private static final String SLOW_GC_LOG_MESSAGE =
         "[gc][{}][{}][{}] duration [{}], collections [{}]/[{}], total [{}]/[{}], memory [{}]->[{}]/[{}], all_pools {}";
 
