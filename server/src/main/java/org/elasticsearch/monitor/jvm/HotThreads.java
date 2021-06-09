@@ -130,6 +130,7 @@ public class HotThreads {
     }
 
     private String innerDetect() throws Exception {
+        // 获取JMX提供的接口ThreadMXBean
         ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();
         if (threadBean.isThreadCpuTimeSupported() == false) {
             throw new ElasticsearchException("thread CPU time is not supported on this JDK");
@@ -146,33 +147,43 @@ public class HotThreads {
         sb.append(ignoreIdleThreads);
         sb.append(":\n");
 
+        // 通过threadBean.getAllThreadIds()获取所有活动线程ids
         Map<Long, MyThreadInfo> threadInfos = new HashMap<>();
         for (long threadId : threadBean.getAllThreadIds()) {
             // ignore our own thread...
+            // 排除当前线程
             if (Thread.currentThread().getId() == threadId) {
                 continue;
             }
+            // 获取当前线程的cpu时间占用
             long cpu = threadBean.getThreadCpuTime(threadId);
             if (cpu == -1) {
                 continue;
             }
+            // 获取线程的线程信息
             ThreadInfo info = threadBean.getThreadInfo(threadId, 0);
             if (info == null) {
                 continue;
             }
+            // 记录第一次采集线程的CPU耗时
             threadInfos.put(threadId, new MyThreadInfo(cpu, info));
         }
+        // 休眠一段时间500ms后再次采集
         Thread.sleep(interval.millis());
+
+        // 再次遍历当前所有线程并进行采集
         for (long threadId : threadBean.getAllThreadIds()) {
             // ignore our own thread...
             if (Thread.currentThread().getId() == threadId) {
                 continue;
             }
+            // 获取当前线程的cpu时间占用
             long cpu = threadBean.getThreadCpuTime(threadId);
             if (cpu == -1) {
                 threadInfos.remove(threadId);
                 continue;
             }
+            // 获取线程的线程信息
             ThreadInfo info = threadBean.getThreadInfo(threadId, 0);
             if (info == null) {
                 threadInfos.remove(threadId);
@@ -180,12 +191,14 @@ public class HotThreads {
             }
             MyThreadInfo data = threadInfos.get(threadId);
             if (data != null) {
+                // 计算cpu耗时的差值
                 data.setDelta(cpu, info);
             } else {
                 threadInfos.remove(threadId);
             }
         }
         // sort by delta CPU time on thread.
+        // 根据cpu耗时差值进行排序，按照耗时倒序进行排列取Top N个线程
         List<MyThreadInfo> hotties = new ArrayList<>(threadInfos.values());
         final int busiestThreads = Math.min(this.busiestThreads, hotties.size());
         // skip that for now
@@ -203,6 +216,7 @@ public class HotThreads {
         CollectionUtil.introSort(hotties, Comparator.comparingLong(getter).reversed());
 
         // analyse N stack traces for M busiest threads
+        // 针对Top N线程进行快照采集，固定间隔进行进行快照采集
         long[] ids = new long[busiestThreads];
         for (int i = 0; i < busiestThreads; i++) {
             MyThreadInfo info = hotties.get(i);
