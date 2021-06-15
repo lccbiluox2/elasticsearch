@@ -39,6 +39,11 @@ import org.elasticsearch.common.settings.Settings;
  * {@code cluster.routing.allocation.cluster_concurrent_rebalance}. Iff this
  * setting is set to {@code -1} the number of concurrent re-balance operations
  * are unlimited.
+ *
+ * 定义了Rebalance策略，检查系统动态配置”cluster.routing.allocation.cluster_concurrent_rebalance”，
+ * 表示集群同时允许进行rebalance操作的并发数量，默认是2。
+ *
+ * 通过检查RoutingNodes类中维护的relocatingShards计数器，看是否超过系统配置的并发数，超过则不允许执行Rebalance操作。
  */
 public class ConcurrentRebalanceAllocationDecider extends AllocationDecider {
 

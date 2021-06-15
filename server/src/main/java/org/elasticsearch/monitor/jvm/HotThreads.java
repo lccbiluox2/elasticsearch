@@ -53,7 +53,7 @@ public class HotThreads {
 
     public HotThreads interval(TimeValue interval) {
         this.interval = interval;
-        return this;
+        return this;AllocationDecider
     }
 
     public HotThreads busiestThreads(int busiestThreads) {
