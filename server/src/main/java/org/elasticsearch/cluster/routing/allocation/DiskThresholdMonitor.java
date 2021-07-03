@@ -166,6 +166,7 @@ public class DiskThresholdMonitor {
             final DiskUsage usage = entry.value;
             final RoutingNode routingNode = routingNodes.node(node);
 
+            // 剩余磁盘使用量 < cluster.routing.allocation.disk.watermark.flood_stage
             if (usage.getFreeBytes() < diskThresholdSettings.getFreeBytesThresholdFloodStage().getBytes() ||
                 usage.getFreeDiskAsPercentage() < diskThresholdSettings.getFreeDiskThresholdFloodStage()) {
 
@@ -184,6 +185,7 @@ public class DiskThresholdMonitor {
                 logger.warn("flood stage disk watermark [{}] exceeded on {}, all indices on this node will be marked read-only",
                     diskThresholdSettings.describeFloodStageThreshold(), usage);
 
+                // 剩余磁盘使用量 < cluster.routing.allocation.disk.watermark.high
             } else if (usage.getFreeBytes() < diskThresholdSettings.getFreeBytesThresholdHigh().getBytes() ||
                 usage.getFreeDiskAsPercentage() < diskThresholdSettings.getFreeDiskThresholdHigh()) {
 
@@ -207,6 +209,8 @@ public class DiskThresholdMonitor {
                         node, diskThresholdSettings.getRerouteInterval());
                 }
 
+
+                // 剩余磁盘使用量 < cluster.routing.allocation.disk.watermark.low
             } else if (usage.getFreeBytes() < diskThresholdSettings.getFreeBytesThresholdLow().getBytes() ||
                 usage.getFreeDiskAsPercentage() < diskThresholdSettings.getFreeDiskThresholdLow()) {
 

@@ -88,6 +88,7 @@ public class Netty4Plugin extends Plugin implements NetworkPlugin {
                                                                         NetworkService networkService,
                                                                         HttpServerTransport.Dispatcher dispatcher,
                                                                         ClusterSettings clusterSettings) {
+        // 创建 Netty4HttpServerTransport
         return Collections.singletonMap(NETTY_HTTP_TRANSPORT_NAME,
             () -> new Netty4HttpServerTransport(settings, networkService, bigArrays, threadPool, xContentRegistry, dispatcher,
                 clusterSettings));

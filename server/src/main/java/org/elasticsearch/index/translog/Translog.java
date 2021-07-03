@@ -1623,6 +1623,8 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
      * @throws IOException if an I/O exception occurred during any file operations
      */
     public void rollGeneration() throws IOException {
+        // TODO: 优化
+        //  腾讯优化的代码，请参考 https://mp.weixin.qq.com/s/UX1_mykX9ChEND1ZYFdheA
         syncBeforeRollGeneration();
         try (Releasable ignored = writeLock.acquire()) {
             ensureOpen();

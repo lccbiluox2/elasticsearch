@@ -38,6 +38,9 @@ import java.util.Map;
  * A container to keep settings for disk thresholds up to date with cluster setting changes.
  */
 public class DiskThresholdSettings {
+    /**
+     * 是否开启基于磁盘的分片分配,默认true
+     */
     public static final Setting<Boolean> CLUSTER_ROUTING_ALLOCATION_DISK_THRESHOLD_ENABLED_SETTING =
         Setting.boolSetting("cluster.routing.allocation.disk.threshold_enabled", true,
             Setting.Property.Dynamic, Setting.Property.NodeScope);
@@ -72,9 +75,19 @@ public class DiskThresholdSettings {
             (s) -> validWatermarkSetting(s, "cluster.routing.allocation.disk.watermark.flood_stage"),
             new FloodStageValidator(),
             Setting.Property.Dynamic, Setting.Property.NodeScope);
+    /**
+     * 当计算一个节点的剩余磁盘空间时，是否考虑正在重新分配到当前节点的分片容量，默认true。
+     * 这可能导致错误的高估一个磁盘的使用率。因为分片重分配可能已经完成了90%，检索到的磁盘使用率包含了这个
+     * 重新分配的分片总大小以及这已经分配了的90%进度的大小。
+     *
+     * 链接：https://www.jianshu.com/p/55fd8a0b120b
+     */
     public static final Setting<Boolean> CLUSTER_ROUTING_ALLOCATION_INCLUDE_RELOCATIONS_SETTING =
         Setting.boolSetting("cluster.routing.allocation.disk.include_relocations", true,
             Setting.Property.Dynamic, Setting.Property.NodeScope, Setting.Property.Deprecated);
+    /**
+     * 分片重分配间隔，默认60秒
+     */
     public static final Setting<TimeValue> CLUSTER_ROUTING_ALLOCATION_REROUTE_INTERVAL_SETTING =
         Setting.positiveTimeSetting("cluster.routing.allocation.disk.reroute_interval", TimeValue.timeValueSeconds(60),
             Setting.Property.Dynamic, Setting.Property.NodeScope);

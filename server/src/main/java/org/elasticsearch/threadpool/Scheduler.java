@@ -50,6 +50,10 @@ public interface Scheduler {
      * be logged as a warning. This includes jobs started using execute, submit and schedule.
      * @param settings the settings to use
      * @return executor
+     *
+     * 优化： 这里可能有一个死锁的问题
+     * 参考：https://www.yangguo.info/2020/08/15/Elasticsearch%20Client%20Bulk%20%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98%E5%A4%84%E7%90%86/
+     *
      */
     static ScheduledThreadPoolExecutor initScheduler(Settings settings) {
         final ScheduledThreadPoolExecutor scheduler = new SafeScheduledThreadPoolExecutor(1,

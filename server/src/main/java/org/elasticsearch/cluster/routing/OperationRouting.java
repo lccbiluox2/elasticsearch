@@ -288,11 +288,12 @@ public class OperationRouting {
 
         if (routing == null) {
             assert(indexMetadata.isRoutingPartitionedIndex() == false) : "A routing value is required for gets from a partitioned index";
-            effectiveRouting = id;
+            effectiveRouting = id; //默认使用id
         } else {
             effectiveRouting = routing;
         }
 
+        //使用了routing_partition_size参数
         if (indexMetadata.isRoutingPartitionedIndex()) {
             partitionOffset = Math.floorMod(Murmur3HashFunction.hash(id), indexMetadata.getRoutingPartitionSize());
         } else {

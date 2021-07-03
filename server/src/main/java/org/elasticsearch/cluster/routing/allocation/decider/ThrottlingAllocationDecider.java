@@ -71,6 +71,10 @@ public class ThrottlingAllocationDecider extends AllocationDecider {
     public static final int DEFAULT_CLUSTER_ROUTING_ALLOCATION_NODE_CONCURRENT_RECOVERIES = 2;
     public static final int DEFAULT_CLUSTER_ROUTING_ALLOCATION_NODE_INITIAL_PRIMARIES_RECOVERIES = 4;
     public static final String NAME = "throttling";
+    /**
+     * 该参数同时设置上述接受发送分片恢复并发数为相同的值。
+     * 详细参数可参考官方文档：https://www.elastic.co/guide/en/elasticsearch/reference/current/shards-allocation.html
+     */
     public static final Setting<Integer> CLUSTER_ROUTING_ALLOCATION_NODE_CONCURRENT_RECOVERIES_SETTING =
         new Setting<>("cluster.routing.allocation.node_concurrent_recoveries",
             Integer.toString(DEFAULT_CLUSTER_ROUTING_ALLOCATION_NODE_CONCURRENT_RECOVERIES),
@@ -80,12 +84,18 @@ public class ThrottlingAllocationDecider extends AllocationDecider {
         Setting.intSetting("cluster.routing.allocation.node_initial_primaries_recoveries",
             DEFAULT_CLUSTER_ROUTING_ALLOCATION_NODE_INITIAL_PRIMARIES_RECOVERIES, 0,
             Property.Dynamic, Property.NodeScope);
+    /**
+     * 节点上最大接受的分片恢复并发数。一般指分片从其它节点恢复至本节点。
+     */
     public static final Setting<Integer> CLUSTER_ROUTING_ALLOCATION_NODE_CONCURRENT_INCOMING_RECOVERIES_SETTING = new Setting<>(
         "cluster.routing.allocation.node_concurrent_incoming_recoveries",
         CLUSTER_ROUTING_ALLOCATION_NODE_CONCURRENT_RECOVERIES_SETTING,
         (s) -> Setting.parseInt(s, 0, "cluster.routing.allocation.node_concurrent_incoming_recoveries"),
         Property.Dynamic,
         Property.NodeScope);
+    /**
+     * 节点上最大发送的分片恢复并发数。一般指分片从本节点恢复至其它节点。
+     */
     public static final Setting<Integer> CLUSTER_ROUTING_ALLOCATION_NODE_CONCURRENT_OUTGOING_RECOVERIES_SETTING = new Setting<>(
         "cluster.routing.allocation.node_concurrent_outgoing_recoveries",
         CLUSTER_ROUTING_ALLOCATION_NODE_CONCURRENT_RECOVERIES_SETTING,

@@ -56,6 +56,13 @@ public class HierarchyCircuitBreakerService extends CircuitBreakerService {
     public static final Setting<Boolean> USE_REAL_MEMORY_USAGE_SETTING =
         Setting.boolSetting("indices.breaker.total.use_real_memory", true, Property.NodeScope);
 
+    /**
+     * 优化：
+     * 参考：https://dzone.com/articles/how-to-optimize-elasticsearch-for-better-search-pe
+     * 查询本身对响应的延迟也有重大影响。为了在查询时不中断电路并导致 Elasticsearch 集群处于不稳定状态，
+     * indices.breaker.total.limit  可以根据查询的复杂性适当地设置 JVM 堆大小。此设置的默认值是 JVM 堆的
+     * 70%。
+     */
     public static final Setting<ByteSizeValue> TOTAL_CIRCUIT_BREAKER_LIMIT_SETTING =
         Setting.memorySizeSetting("indices.breaker.total.limit", settings -> {
             if (USE_REAL_MEMORY_USAGE_SETTING.get(settings)) {

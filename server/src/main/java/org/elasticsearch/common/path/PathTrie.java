@@ -75,7 +75,7 @@ public class PathTrie<T> {
 
     public class TrieNode {
         private transient String key;
-        private transient T value;
+        private transient T value;// （回调函数）
         private final String wildcard;
 
         private transient String namedWildcard;

@@ -85,6 +85,12 @@ public final class IndicesRequestCache implements RemovalListener<IndicesRequest
      */
     public static final Setting<Boolean> INDEX_CACHE_REQUEST_ENABLED_SETTING =
         Setting.boolSetting("index.requests.cache.enable", true, Property.Dynamic, Property.IndexScope);
+    /**
+     * 优化：
+     * 参考：https://mp.weixin.qq.com/s?__biz=Mzg2NTU5NjcxMA==&mid=2247483772&idx=1&sn=04a5e63ceb128d3797bde030304de562&source=41#wechat_redirect
+     * ES 默认情况下最多使用堆内存的 1% 用作 Request Cache，这是一个节点级别的配置：
+     * Request Cache默认是开启的。你可以为某个索引动态启用或禁用缓存：
+     */
     public static final Setting<ByteSizeValue> INDICES_CACHE_QUERY_SIZE =
         Setting.memorySizeSetting("indices.requests.cache.size", "1%", Property.NodeScope);
     public static final Setting<TimeValue> INDICES_CACHE_QUERY_EXPIRE =

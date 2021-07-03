@@ -166,6 +166,8 @@ public class TranslogWriter extends BaseTranslogReader implements Closeable {
      * @param seqNo the sequence number associated with the operation
      * @return the location the bytes were written to
      * @throws IOException if writing to the translog resulted in an I/O exception
+     *
+     * 优化：请参考 https://mp.weixin.qq.com/s/uYWyckRRlS48GaBDSqPDTg
      */
     public synchronized Translog.Location add(final BytesReference data, final long seqNo) throws IOException {
         ensureOpen();

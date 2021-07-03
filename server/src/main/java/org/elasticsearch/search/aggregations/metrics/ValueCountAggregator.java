@@ -61,6 +61,14 @@ public class ValueCountAggregator extends NumericMetricsAggregator.SingleValue {
         }
     }
 
+    /**
+     * 优化：参考 https://mp.weixin.qq.com/s/Dyys-aWoMsgWwwlo4HfEFA
+     *
+     * @param ctx
+     * @param sub
+     * @return
+     * @throws IOException
+     */
     @Override
     public LeafBucketCollector getLeafCollector(LeafReaderContext ctx,
             final LeafBucketCollector sub) throws IOException {
