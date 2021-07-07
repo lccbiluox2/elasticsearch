@@ -431,8 +431,10 @@ public class ZenDiscovery extends AbstractLifecycleComponent implements Discover
         DiscoveryNode masterNode = null;
         final Thread currentThread = Thread.currentThread();
         nodeJoinController.startElectionContext();
+
+        // 一直阻塞直到找到master节点，在集群刚刚启动，或者集群master丢失的情况，这种阻塞能够保证集群一致性
         while (masterNode == null && joinThreadControl.joinThreadActive(currentThread)) {
-            masterNode = findMaster();
+            masterNode = findMaster(); // 找到Master， 可能是自己也可能不是自己
         }
 
         if (!joinThreadControl.joinThreadActive(currentThread)) {
@@ -796,6 +798,8 @@ public class ZenDiscovery extends AbstractLifecycleComponent implements Discover
 
     private DiscoveryNode findMaster() {
         logger.trace("starting to ping");
+
+        // 通过ping 其他节点来判定本节点能够连接上的节点的个数
         List<ZenPing.PingResponse> fullPingResponses = pingAndWait(pingTimeout).toList();
         if (fullPingResponses == null) {
             logger.trace("No full ping responses");
@@ -822,8 +826,12 @@ public class ZenDiscovery extends AbstractLifecycleComponent implements Discover
         fullPingResponses.add(new ZenPing.PingResponse(localNode, null, this.clusterState()));
 
         // filter responses
+        // 过滤PingResponse, 排除掉client节点，单纯的data节点
         final List<ZenPing.PingResponse> pingResponses = filterPingResponses(fullPingResponses, masterElectionIgnoreNonMasters, logger);
 
+        //获取所有ping响应中的master节点，如果master节点是节点本身则过滤掉。
+        // 要么是同一个节点（出现不同节点则集群出现了问题不过没关系，后面会进行选举）
+        // 正常情况下， pingMasters只有一个值
         List<DiscoveryNode> activeMasters = new ArrayList<>();
         for (ZenPing.PingResponse pingResponse : pingResponses) {
             // We can't include the local node in pingMasters list, otherwise we may up electing ourselves without
@@ -836,14 +844,20 @@ public class ZenDiscovery extends AbstractLifecycleComponent implements Discover
         // nodes discovered during pinging
         List<ElectMasterService.MasterCandidate> masterCandidates = new ArrayList<>();
         for (ZenPing.PingResponse pingResponse : pingResponses) {
+            //本节点暂时是master也要加入候选节点进行选举
             if (pingResponse.node().isMasterNode()) {
+                // 本节点被人选举为master
                 masterCandidates.add(new ElectMasterService.MasterCandidate(pingResponse.node(), pingResponse.getClusterStateVersion()));
             }
         }
 
+        //pingMasters为空，则本节点是master节点，
         if (activeMasters.isEmpty()) {
+            // pingMasters时空有两种情况，一种本地节点就是master节点
+            // 保证选举数量,说明有足够多的节点选举本节点为master，但是这还不够，本节点还需要再选举一次，如果本次选举节点仍旧是自己，那么本节点才能成为master。
             if (electMaster.hasEnoughCandidates(masterCandidates)) {
-                final ElectMasterService.MasterCandidate winner = electMaster.electMaster(masterCandidates);
+                // 判断是否包含足够的节点数，是否大于n/2 + 1
+                final ElectMasterService.MasterCandidate winner = electMaster.electMaster(masterCandidates); // 重新选举
                 logger.trace("candidate {} won election", winner);
                 return winner.getNode();
             } else {
@@ -853,6 +867,7 @@ public class ZenDiscovery extends AbstractLifecycleComponent implements Discover
                 return null;
             }
         } else {
+            //pingMasters不为空（pingMasters列表中应该都是同一个节点），本节点没有被选举为master，那就接受之前的选举。
             assert !activeMasters.contains(localNode) :
                 "local node should never be elected as master when other nodes indicate an active master";
             // lets tie break between discovered nodes

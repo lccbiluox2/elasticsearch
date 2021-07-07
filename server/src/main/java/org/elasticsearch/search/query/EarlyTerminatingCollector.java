@@ -30,6 +30,9 @@ import java.io.IOException;
 
 /**
  * A {@link Collector} that early terminates collection after <code>maxCountHits</code> docs have been collected.
+ *
+ * EarlyTerminatingCollector：判断请求中是否提前结束Doc的Seek，如果是则创建EarlyTerminatingCollector，
+ * 加入Collector List中。在后续Seek和收集Doc的过程中，当Seek的Doc数达到Early Terminating后会停止Seek后续倒排链。
  */
 public class EarlyTerminatingCollector extends FilterCollector {
     static final class EarlyTerminationException extends RuntimeException {

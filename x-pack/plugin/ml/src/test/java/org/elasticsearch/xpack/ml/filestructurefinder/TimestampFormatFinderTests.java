@@ -23,6 +23,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+/**
+ * DocumentsWriterPerThread
+ * 这个相关内容请参考：https://www.easyice.cn/archives/323
+ */
 public class TimestampFormatFinderTests extends FileStructureTestCase {
 
     private static final String EXCEPTION_TRACE_SAMPLE =

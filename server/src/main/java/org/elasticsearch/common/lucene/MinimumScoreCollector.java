@@ -29,6 +29,11 @@ import org.apache.lucene.search.SimpleCollector;
 
 import java.io.IOException;
 
+/**
+ * MinimumScoreCollector：判断请求中是否制定了最小分数阈值，如果指定了，
+ * 则创建MinimumScoreCollector加入Collector List中，
+ * 在后续收集结果时，会过滤掉得分小于最小分数的Doc。
+ */
 public class MinimumScoreCollector extends SimpleCollector {
 
     private final Collector collector;

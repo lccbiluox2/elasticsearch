@@ -43,6 +43,10 @@ import java.util.function.BiFunction;
 /**
  * This search phase merges the query results from the previous phase together and calculates the topN hits for this search.
  * Then it reaches out to all relevant shards to fetch the topN hits.
+ *
+ * 查询的时候取回数据的阶段
+ *
+ * 参考：https://www.easyice.cn/archives/257
  */
 final class FetchSearchPhase extends SearchPhase {
     private final AtomicArray<FetchSearchResult> fetchResults;

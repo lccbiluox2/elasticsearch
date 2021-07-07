@@ -30,6 +30,10 @@ import org.elasticsearch.common.lucene.Lucene;
 
 import java.io.IOException;
 
+/**
+ * FilteredCollector：先判断请求中是否有Post Filter，Post Filter用于Search，Agg等结束后再次对结果做Filter，
+ * 希望Filter不影响Agg结果。如果有Post Filter则创建一个FilteredCollector，加入Collector List中。
+ */
 public class FilteredCollector implements Collector {
 
     private final Collector collector;
