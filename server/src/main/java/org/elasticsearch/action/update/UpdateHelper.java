@@ -54,6 +54,8 @@ import java.util.function.LongSupplier;
 
 /**
  * Helper for translating an update request to an index, delete request or update response.
+ *
+ * 更新逻辑请参考：https://developer.aliyun.com/article/767822
  */
 public class UpdateHelper {
 
@@ -67,6 +69,9 @@ public class UpdateHelper {
 
     /**
      * Prepares an update request by converting it into an index or delete request or an update response (no action).
+     *
+     * 1、获取待更新文档的数据
+     * 2、执行更新文档的操作
      */
     public Result prepare(UpdateRequest request, IndexShard indexShard, LongSupplier nowInMillis) {
         final GetResult getResult = indexShard.getService().getForUpdate(

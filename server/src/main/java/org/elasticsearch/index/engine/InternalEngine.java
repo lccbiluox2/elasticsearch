@@ -791,7 +791,12 @@ public class InternalEngine extends Engine {
         return status;
     }
 
-    /** resolves the current version of the document, returning null if not found */
+    /** resolves the current version of the document, returning null if not found
+     *
+     * 1、尝试从 versionMap 中读取待写入文档的 version，也即从内存中读取。versionMap 会暂存还没有 commit 到磁盘的文档版本信息。
+     *
+     * 2、如果第 1 步中没有读到，则从 index 中读取，也即从文件中读取。
+     * */
     private VersionValue resolveDocVersion(final Operation op, boolean loadSeqNo) throws IOException {
         assert incrementVersionLookup(); // used for asserting in tests
         VersionValue versionValue = getVersionFromMap(op.uid().bytes());
@@ -1049,6 +1054,21 @@ public class InternalEngine extends Engine {
         }
     }
 
+    /**
+     * 这个方法最终返回一个 IndexingStrategy，即一个索引的策略，总共有如下几个策略：
+     *
+     * • optimizedAppendOnly
+     * • skipDueToVersionConflict
+     * • processNormally
+     * • overrideExistingAsIfNotThere
+     * • skipAsStale
+     *
+     * 参考：https://developer.aliyun.com/article/767822
+     *
+     * @param index
+     * @return
+     * @throws IOException
+     */
     private IndexingStrategy planIndexingAsPrimary(Index index) throws IOException {
         assert index.origin() == Operation.Origin.PRIMARY : "planing as primary but origin isn't. got " + index.origin();
         final IndexingStrategy plan;
@@ -2222,6 +2242,14 @@ public class InternalEngine extends Engine {
         }
     }
 
+    /**
+     * CreateWriter函数用于生成一个IndexWriter实例，这是Lucene的类，这个实例用于管理一个lucene索引，
+     * 众所周知ES底层是基于Lucene实现的。而ES的一个分片就是一个Lucene索引了。在创建IndexWriter同时会
+     * 创建SegmentInfos的实例去管理该分配的段信息。
+     *
+     * @return
+     * @throws IOException
+     */
     private IndexWriter createWriter() throws IOException {
         try {
             final IndexWriterConfig iwc = getIndexWriterConfig();

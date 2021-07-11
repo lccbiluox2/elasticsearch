@@ -665,6 +665,7 @@ public abstract class TransportReplicationAction<
                     "request waitForActiveShards must be set in resolveRequest";
 
                 final ShardRouting primary = state.getRoutingTable().shardRoutingTable(request.shardId()).primaryShard();
+                //如果primary shard不是active的会有retry机制
                 if (primary == null || primary.active() == false) {
                     logger.trace("primary shard [{}] is not yet active, scheduling a retry: action [{}], request [{}], "
                         + "cluster state version [{}]", request.shardId(), actionName, request, state.version());
@@ -678,9 +679,12 @@ public abstract class TransportReplicationAction<
                     return;
                 }
                 final DiscoveryNode node = state.nodes().get(primary.currentNodeId());
+                //如果primary在本机就直接执行，如果不在会再发送到其shard所在的node
                 if (primary.currentNodeId().equals(state.nodes().getLocalNodeId())) {
+                    // TODO: 分配到本地
                     performLocalAction(state, primary, node, indexMetadata);
                 } else {
+                    // 分配到远程
                     performRemoteAction(state, primary, node);
                 }
             }
@@ -1033,7 +1037,9 @@ public abstract class TransportReplicationAction<
         }
     }
 
-    /** a wrapper class to encapsulate a request when being sent to a specific allocation id **/
+    /** a wrapper class to encapsulate a request when being sent to a specific allocation id
+     * 当发送到特定分配id时用于封装请求的包装器类
+     * **/
     public static class ConcreteShardRequest<R extends TransportRequest> extends TransportRequest {
 
         /** {@link AllocationId#getId()} of the shard this request is sent to **/

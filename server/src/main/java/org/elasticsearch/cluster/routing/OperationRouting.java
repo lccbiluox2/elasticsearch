@@ -282,6 +282,16 @@ public class OperationRouting {
         return new ShardId(indexMetadata.getIndex(), generateShardId(indexMetadata, id, routing));
     }
 
+
+    /**
+     * 迷惑： 生成shardId的方法好像变化了。
+     *
+     *
+     * @param indexMetadata
+     * @param id
+     * @param routing
+     * @return
+     */
     public static int generateShardId(IndexMetadata indexMetadata, @Nullable String id, @Nullable String routing) {
         final String effectiveRouting;
         final int partitionOffset;

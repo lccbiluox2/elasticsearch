@@ -516,6 +516,7 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
             }
 
             // first, go over all the requests and create a ShardId -> Operations mapping
+            // 接着对新形成的这个结构(ShardId -> List[BulkItemRequest])做循环，也就是针对每个ShardId里的数据进行统一处理。
             Map<ShardId, List<BulkItemRequest>> requestsByShard = new HashMap<>();
             for (int i = 0; i < bulkRequest.requests.size(); i++) {
                 DocWriteRequest<?> request = bulkRequest.requests.get(i);
@@ -523,8 +524,13 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                     continue;
                 }
                 String concreteIndex = concreteIndices.getConcreteIndex(request.index()).getName();
+
+                // 获取每个request应该发送到的shardId(获取过程： request有routing就直接返回，如果没有，会先对id求一个hash
                 ShardId shardId = clusterService.operationRouting().indexShards(clusterState, concreteIndex, request.id(),
                     request.routing()).shardId();
+
+                // 有了ShardId,bulkRequest,List[BulkItemRequest]等信息后，遍历map 统一封装成BulkShardRequest，就是对属于同一ShardId的数据构建
+                // 一个新的类似BulkRequest的对象。包含配置consistencyLevel和timeout。
                 List<BulkItemRequest> shardRequests = requestsByShard.computeIfAbsent(shardId, shard -> new ArrayList<>());
                 shardRequests.add(new BulkItemRequest(i, request));
             }
@@ -548,6 +554,8 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
                 if (task != null) {
                     bulkShardRequest.setParentTask(nodeId, task.getId());
                 }
+
+                // 这里的shardBulkAction 是 TransportShardBulkAction
                 shardBulkAction.execute(bulkShardRequest, new ActionListener<BulkShardResponse>() {
                     @Override
                     public void onResponse(BulkShardResponse bulkShardResponse) {

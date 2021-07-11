@@ -93,6 +93,22 @@ import java.util.stream.Stream;
  * which is an fsynced copy of its last {@code translog.ckp} such that in disaster recovery last fsynced offsets, number of
  * operation etc. are still preserved.
  * </p>
+ *
+ * Translog是一个每个索引分片组件，它以持久的方式记录所有未提交的索引操作。
+ *
+ * 在Elasticsearch中，每个{@link org.elasticsearch.index.engine.InternalEngine}有一个Translog实例。
+
+ * 此外，由于Elasticsearch 2.0，引擎还会在每次提交时记录一个{@link #TRANSLOG_UUID_KEY}，以确保lucene索引和事务日志文件之间有很强的关联。
+ * 这个UUID用于防止从属于不同引擎的事务日志中意外恢复。
+ *
+ * 在由Translog生成ID引用的任何时候，每个Translog只有一个打开的Translog文件用于写。这个ID被写入一个{@code translog。Ckp}文件，
+ * 该文件被设计成适合单个磁盘块，因此对文件的写入是原子性的。检查点文件写入translog的每个fsync操作，并记录写入的操作数、
+ * 当前translog的文件生成、以字节为单位的fsynchronized偏移量，以及其他重要的统计信息。
+ *
+ * 当当前translog文件达到一定规模({@link IndexSettings # INDEX_TRANSLOG_GENERATION_THRESHOLD_SIZE_SETTING},
+ * 或者当一个清晰的分离新老业务(主要术语)的变化,当前文件是只读和重新创建新写文件。任何非当前的只读translog文件总是有一个
+ * {@code translog-${gen}。Ckp}与它关联，它是它最后一个{@code translog的fsynchronized副本。Ckp}，以便在灾难恢复中，
+ * 最后的fsync偏移量、操作数等仍被保留。
  */
 public class Translog extends AbstractIndexShardComponent implements IndexShardComponent, Closeable {
 
@@ -105,6 +121,11 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
      *  - we need random exception on the FileSystem API tests for all this.
      *  - we need to page align the last write before we sync, we can take advantage of ensureSynced for this since we might have already
      *    fsynced far enough
+     *
+     *  -我们可能需要一些类似删除策略的东西来持有超过一个超越日志最终(我认为序列id需要这个)，但我们可以进行重构
+     *  -使用一个简单的BufferedOutputStream写东西和折叠BufferedTranslogWriter到它的超类…棘手的是，我们需要能够进行随机访问读取，甚至从缓冲区
+     *  -我们需要随机异常的文件系统API测试所有这些。
+     *  -我们需要在同步前对最后一次写入进行页面对齐，我们可以利用ensureSynced，因为我们可能已经同步足够远了
      */
     public static final String TRANSLOG_UUID_KEY = "translog_uuid";
     public static final String TRANSLOG_FILE_PREFIX = "translog-";
@@ -139,6 +160,11 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
      * generation referenced from already committed data. This means all operations that have not yet been committed should be in the
      * translog file referenced by this generation. The translog creation will fail if this generation can't be opened.
      *
+     * 创建一个新的Translog实例。这个方法将创建一个新的事务日志，除非给定的{@link TranslogGeneration}是{@code null}。
+     * 如果生成的是{@code null}，这个方法是破坏性的，会删除给定的translog路径中的所有文件。如果生成的不是{@code null}，
+     * 此方法将尝试打开给定的translog生成。该代被视为从已经提交的数据引用的最后代。这意味着所有尚未提交的操作都应该在此生成所
+     * 引用的translog文件中。如果不能打开此生成，则translog创建将失败。
+     *
      * @param config                   the configuration of this translog
      * @param translogUUID             the translog uuid to open, null for a new translog
      * @param deletionPolicy           an instance of {@link TranslogDeletionPolicy} that controls when a translog file can be safely
@@ -170,7 +196,9 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
         Files.createDirectories(this.location);
 
         try {
+            // 读取并且返回当前的checkpoint
             final Checkpoint checkpoint = readCheckpoint(location);
+            // 组建下一次的 transLog文件名称
             final Path nextTranslogFile = location.resolve(getFilename(checkpoint.generation + 1));
             final Path currentCheckpointFile = location.resolve(getCommitCheckpointFileName(checkpoint.generation));
             // this is special handling for error condition when we create a new writer but we fail to bake
@@ -181,6 +209,25 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
             //
             // For this to happen we must have already copied the translog.ckp file into translog-gen.ckp so we first check if that
             // file exists. If not we don't even try to clean it up and wait until we fail creating it
+            /**
+             * 这是一个特殊的错误处理条件，当我们创建一个新的写入器，但我们不能烘烤新写入的文件(生成+1)到检查点。这仍然是一个有效的状态我们
+             * 只需要在继续之前清理一下我们之前点击了这个，然后盲目地删除了新一代尽管我们已经把它烤进去了，然后点击了这个
+             *
+             * 以https://discuss.elastic.co/t/cannot-recover-index-because-of-missing-tanslog-files/38336为例
+             *
+             * 要做到这一点，我们必须已经复制了跨对数。CKP文件到translog-gen。CKP，所以我们首先检查文件是否存在。如果不是，我们甚至不要
+             * 试图清理它，直到我们失败地创造它
+             */
+
+            /**
+             * 那么如何保证translog文件的完整性的呢？
+             * 1、 前4个字节校验
+             * .tlog文件的前4个字节应该固定是0x3FD76C17，如果校验发现不是该值，说明文件已经损坏。
+             * 2、 translogUUID校验
+             * 前面已经介绍过translogUUID,它是一个translog的唯一标志。当一个新的translog被创建的时候会生成一个translogUUID，
+             * 它会被保存在translog*.tlog文件中，随后translogUUID会被commit到段文件中。因此段文件中的translogUUID应该与tlog中一致。
+             * 此处的校验正是校验段文件中读取的translogUUID是否与tlog中保存的一致，如果不一致就会抛异常。
+             */
             assert Files.exists(nextTranslogFile) == false ||
                     Files.size(nextTranslogFile) <= TranslogHeader.headerSizeInBytes(translogUUID) :
                         "unexpected translog file: [" + nextTranslogFile + "]";
@@ -189,6 +236,7 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
                 logger.warn("deleted previously created, but not yet committed, next generation [{}]. This can happen due to a" +
                     " tragic exception when creating a new generation", nextTranslogFile.getFileName());
             }
+            // 恢复磁盘上找到的所有translog文件
             this.readers.addAll(recoverFromFiles(checkpoint));
             if (readers.isEmpty()) {
                 throw new IllegalStateException("at least one reader must be recovered");
@@ -215,7 +263,9 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
         }
     }
 
-    /** recover all translog files found on disk */
+    /** recover all translog files found on disk
+     * 恢复磁盘上找到的所有translog文件
+     * */
     private ArrayList<TranslogReader> recoverFromFiles(Checkpoint checkpoint) throws IOException {
         boolean success = false;
         ArrayList<TranslogReader> foundTranslogs = new ArrayList<>();
@@ -235,6 +285,7 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
                 }
                 final Checkpoint readerCheckpoint = i == checkpoint.generation ? checkpoint
                     : Checkpoint.read(location.resolve(getCommitCheckpointFileName(i)));
+                // 打开读取器
                 final TranslogReader reader = openReader(committedTranslogFile, readerCheckpoint);
                 assert reader.getPrimaryTerm() <= primaryTermSupplier.getAsLong() :
                     "Primary terms go backwards; current term [" + primaryTermSupplier.getAsLong() + "] translog path [ "
@@ -1735,6 +1786,9 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
 
     /**
      * References a transaction log generation
+     *
+     * translogUUID唯一标志一个translog，translogFileGeneration表示translog的迭代版本号，所以在ES的运行过程中translog的版本号
+     * 应该是会不断递增。Translog的文件编号就是这个版本号了。
      */
     public static final class TranslogGeneration {
         public final String translogUUID;
@@ -1749,6 +1803,9 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
 
     /**
      * Returns the current generation of this translog. This corresponds to the latest uncommitted translog generation
+     *
+     * translogUUID唯一标志一个translog，translogFileGeneration表示translog的迭代版本号，所以在ES的运行过程中translog的版本号应该是会不断递增。
+     * Translog的文件编号就是这个版本号了。
      */
     public TranslogGeneration getGeneration() {
         return new TranslogGeneration(translogUUID, currentFileGeneration());
