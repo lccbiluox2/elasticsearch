@@ -278,6 +278,19 @@ public class MetadataCreateIndexService {
         }, listener::onFailure));
     }
 
+    /**
+     * 其中内部通过indexService.index()来创建索引,源码如下:
+     *
+     * 这些方法调整的大概流程如下:
+     *
+     * 1. 校验请参数是否合法
+     * 2. 查看集群是否已经有该名称的索引别名
+     * 3. 查找集群是否配置过该索引的模板(template)
+     * 4. 开始检查集群配置参数,没有就设置默认值,比如:number_of_shards,number_of_replicas,auto_expand_replicas,
+     *    index.version.created,index.creation_date,index.provided_name,
+     * @param request
+     * @param listener
+     */
     private void onlyCreateIndex(final CreateIndexClusterStateUpdateRequest request,
                                  final ActionListener<ClusterStateUpdateResponse> listener) {
         Settings.Builder updatedSettingsBuilder = Settings.builder();

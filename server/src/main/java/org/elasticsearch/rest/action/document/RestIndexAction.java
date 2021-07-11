@@ -125,6 +125,30 @@ public class RestIndexAction extends BaseRestHandler {
         }
     }
 
+    /**
+     * 整个流程大概如下:
+     *
+     * 获取请求中的的index,type,id,并构建一个IndexRequest,用于创建索引的请求
+     * 获取请求中的routing参数
+     * 获取请求中的parent参数
+     * 判断请求中是否有timestamp参数
+     * 判断请中是否有ttl参数
+     * 获取请中的pipeline参数
+     * 设置request body,这个步骤同时校验了接收的rest请求中是否包含request body.
+     * 获取请求中的timeout参数,如果有则设置,没有使用默认的超时时间
+     * 获取请中的refresh参数
+     * 设置请求对应的版本
+     * 获取请求中的op_type参数
+     * 获取请求中的wait_for_active_shards参数
+     * 获取请中的op_type参数
+     *
+     * @param request the request to execute
+     * @param client  client for executing actions on the local node
+     * @return
+     * @throws IOException
+     *
+     * 参考：https://github.com/felayman/elasticsearch-full/blob/master/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/Elasticsearch%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90%E2%80%94%E5%88%9B%E5%BB%BA%E7%B4%A2%E5%BC%95(%E5%9B%9B).md
+     */
     @Override
     public RestChannelConsumer prepareRequest(final RestRequest request, final NodeClient client) throws IOException {
         IndexRequest indexRequest;

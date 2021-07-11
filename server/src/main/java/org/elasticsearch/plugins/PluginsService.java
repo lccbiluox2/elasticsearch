@@ -145,6 +145,13 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
     /**
      * Constructs a new PluginService
      *
+     * 上述代码的大概流程如下:
+     *
+     * 1. 加载classpath下的插件
+     * 2. 查找Elasticsearch安装目录下的modules目录下的插件(module和plugin在本质上是同一个东西,module是内置服务,plugin是对外提供服务)
+     * 3. 查找Elasticsearch安装目录下的plugins目录下的插件
+     * 4. 合并3、4步骤中查找到的插件,一起加载到Elasticsearch环境中—这是重点
+     *
      * @param settings         The settings of the system
      * @param modulesDirectory The directory modules exist in, or null if modules should not be loaded from the filesystem
      * @param pluginsDirectory The directory plugins exist in, or null if plugins should not be loaded from the filesystem
@@ -528,6 +535,21 @@ public class PluginsService implements ReportingService<PluginsAndModules> {
         sortedBundles.add(bundle);
     }
 
+    /**
+     * Elasticsearch是如何加载这些modules和plugins的(modules和plugins绑定一起后的名称为Bundle),调用方法为
+     * List<Tuple<PluginInfo, Plugin>> loaded = loadBundles(seenBundles),
+     *
+     * 整个加载流程大概如下:
+     *
+     * 1. 创建一个类加载器,用于加载插件中所依赖的jar包
+     * 2. 重新加载Lucene的SPI服务
+     * 3. 用创建好的类加载器加载插件类
+     * 4. 用加载好的插件类创建插件服务(就是创建插件实例,用于对外提供服务)
+     *
+     *
+     * @param bundles
+     * @return
+     */
     private List<Tuple<PluginInfo, Plugin>> loadBundles(Set<Bundle> bundles) {
         List<Tuple<PluginInfo, Plugin>> plugins = new ArrayList<>();
         Map<String, Plugin> loaded = new HashMap<>();

@@ -157,6 +157,22 @@ public class TransportBulkAction extends HandledTransportAction<BulkRequest, Bul
         return indexRequest;
     }
 
+    /**
+     * 其大概处理流程如下 :
+     *
+     * 1. 判断bulk请是否需要加锁
+     * 2. 获取所有需要处理的索引名称 对应上面的Step 1
+     * 3. 过滤出bulk操作中不存在的索引,对应上面的Step 2
+     * 4. 调用shouldAutoCreate(String index, ClusterState state),根据当前集群状态,判断当前索引是否需要自动创建
+     * 5. 如果bulk操作的所有索引都不需要创建索引,则直接执行批量请求,否则会先创建索引
+     * 6. 创建索引的具体实现交给TransportCreateIndexAction来完成,而TransportCreateIndexAction是TransportMasterNodeAction的子类,在TransportMasterNodeAction中完成了索引创建,这里也说明创建索引操作都会在master节点上完成
+     * 7. master节点会针对所有请求会包装成一个Task,随后将该task以及请求,调用masterOperation()方法交给
+     * TransportCreateIndexAction来完成创建索引前的工作
+     *
+     * @param task
+     * @param bulkRequest
+     * @param listener
+     */
     @Override
     protected void doExecute(Task task, BulkRequest bulkRequest, ActionListener<BulkResponse> listener) {
         final long startTime = relativeTime();
