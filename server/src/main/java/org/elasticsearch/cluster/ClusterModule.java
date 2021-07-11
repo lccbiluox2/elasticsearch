@@ -217,6 +217,9 @@ public class ClusterModule extends AbstractModule {
         return indexNameExpressionResolver;
     }
 
+    /**
+     * 此处参考：https://blog.csdn.net/qq_21383435/article/details/118546219
+     */
     // TODO: this is public so allocation benchmark can access the default deciders...can we do that in another way?
     /** Return a new {@link AllocationDecider} instance with builtin deciders as well as those from plugins. */
     public static Collection<AllocationDecider> createAllocationDeciders(Settings settings, ClusterSettings clusterSettings,

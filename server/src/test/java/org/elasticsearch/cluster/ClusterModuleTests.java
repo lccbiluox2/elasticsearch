@@ -176,6 +176,10 @@ public class ClusterModuleTests extends ModuleTestCase {
     // slower allocation deciders come last and we can exit early if there is a NO decision without
     // running them. If the order of the deciders is changed for a valid reason, the order should be
     // changed in the test too.
+
+    /**
+     * 此处参考：https://www.easyice.cn/archives/248
+     */
     public void testAllocationDeciderOrder() {
         List<Class<? extends AllocationDecider>> expectedDeciders = Arrays.asList(
             MaxRetryAllocationDecider.class,

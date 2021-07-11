@@ -121,6 +121,9 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
         }
 
         if (discovery instanceof Coordinator) {
+            /**
+             * 参考：https://www.easyice.cn/archives/226
+             */
             recoveryRunnable = () ->
                     clusterService.submitStateUpdateTask("local-gateway-elected-state", new RecoverStateUpdateTask());
         } else {
@@ -289,6 +292,9 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
         @Override
         public void onSuccess(final ClusterState recoveredState) {
             logger.trace("successful state recovery, importing cluster state...");
+            /**
+             * 参考：https://www.easyice.cn/archives/226
+             */
             clusterService.submitStateUpdateTask("local-gateway-elected-state", new RecoverStateUpdateTask() {
                 @Override
                 public ClusterState execute(final ClusterState currentState) {

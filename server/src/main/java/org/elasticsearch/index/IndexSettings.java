@@ -72,6 +72,7 @@ public final class IndexSettings {
         Setting.timeSetting("index.search.idle.after", TimeValue.timeValueSeconds(30),
             TimeValue.timeValueMinutes(0), Property.IndexScope, Property.Dynamic);
     /**
+     * 优化点：
      * 调整您的translog设置：在2.0版本中，弹性搜索将在每次请求之后将translog数据刷新到磁盘，从而在硬件故障
      * 时降低数据丢失的风险。如果希望将索引性能优先于潜在的数据丢失，可以更改index.translog.durability为async。
      * 有了这一点，索引将在sync_interval上提交对磁盘的写操作，而不是在每个请求之后，从而使更多的资源可以用于索引请求。

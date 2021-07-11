@@ -25,6 +25,8 @@ import java.util.Objects;
 
 /**
  * Base class for all individual search phases like collecting distributed frequencies, fetching documents, querying shards.
+ *
+ * 参考: https://www.easyice.cn/archives/257
  */
 abstract class SearchPhase implements CheckedRunnable<IOException> {
     private final String name;

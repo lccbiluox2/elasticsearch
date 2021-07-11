@@ -94,6 +94,10 @@ final class Bootstrap {
         }, "elasticsearch[keepAlive/" + Version.CURRENT + "]");
         keepAliveThread.setDaemon(false);
         // keep this thread alive (non daemon thread) until we shutdown
+        // 启动keepAliveThread 线程，这个线程在Bootstrap初始化的时候就已经实例化了，该线程创建了一个计数为1的CountDownLatch，
+        // 目的是在启动完成后能顺利添加关闭钩子，而这句,意思就是在jvm中增加一个关闭的钩子，当jvm关闭的时候，
+        // 会执行系统中已经设置的所有通过方法addShutdownHook添加的钩子，当系统执行完这些钩子后，jvm才会关闭。
+        // 所以这些钩子可以在jvm关闭的时候进行内存清理、对象销毁等操作。
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -172,11 +176,13 @@ final class Bootstrap {
         Settings settings = environment.settings();
 
         try {
+            // 通过environment生成本地插件控制器
             spawner.spawnNativeControllers(environment, true);
         } catch (IOException e) {
             throw new BootstrapException(e);
         }
 
+        // 初始化本地资源
         initializeNatives(
                 environment.tmpFile(),
                 BootstrapSettings.MEMORY_LOCK_SETTING.get(settings),
@@ -184,8 +190,10 @@ final class Bootstrap {
                 BootstrapSettings.CTRLHANDLER_SETTING.get(settings));
 
         // initialize probes before the security manager is installed
+        // 在安全管理器安装之前初始化探针
         initializeProbes();
 
+        // 添加关闭钩子
         if (addShutdownHook) {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
@@ -211,16 +219,19 @@ final class Bootstrap {
         try {
             // look for jar hell
             final Logger logger = LogManager.getLogger(JarHell.class);
+            // 检查jar重复
             JarHell.checkJarHell(logger::debug);
         } catch (IOException | URISyntaxException e) {
             throw new BootstrapException(e);
         }
 
         // Log ifconfig output before SecurityManager is installed
+        // 在安全管理器安装之前配置日志输出器
         IfConfig.logIfNecessary();
 
         // install SM after natives, shutdown hooks, etc.
         try {
+            // 安装安全管理器
             Security.configure(environment, BootstrapSettings.SECURITY_FILTER_BAD_DEFAULTS_SETTING.get(settings));
         } catch (IOException | NoSuchAlgorithmException e) {
             throw new BootstrapException(e);
@@ -337,6 +348,13 @@ final class Bootstrap {
 
     /**
      * This method is invoked by {@link Elasticsearch#main(String[])} to startup elasticsearch.
+     * @param foreground 标识elasticsearch是否是作为后台守护进程启动的，
+     * @param pidFile 通过parser解析args后得到，实际是解析了默认命令行参数（verbose，E,silent，version，help，quiet，daemonize，pidfile）
+     * @param quiet 同上
+     * @param initialEnv  Environment实例化的环境参数对象，保存了一些类似于repoFile，configFile，pluginsFile，binFile，libFile等参数。
+     * @throws BootstrapException
+     * @throws NodeValidationException
+     * @throws UserException
      */
     static void init(
             final boolean foreground,

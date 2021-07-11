@@ -459,6 +459,16 @@ public class InternalEngine extends Engine {
         }
     }
 
+    /**
+     * 参考：https://www.easyice.cn/archives/231
+     *
+     * 具体的从 Translog 恢复的实现
+     *
+     * @param translogRecoveryRunner the translog recovery runner
+     * @param recoverUpToSeqNo       the upper bound, inclusive, of sequence number to be recovered
+     * @return
+     * @throws IOException
+     */
     @Override
     public InternalEngine recoverFromTranslog(TranslogRecoveryRunner translogRecoveryRunner, long recoverUpToSeqNo) throws IOException {
         flushLock.lock();

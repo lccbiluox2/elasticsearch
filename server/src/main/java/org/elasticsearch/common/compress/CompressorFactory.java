@@ -28,6 +28,9 @@ import org.elasticsearch.common.xcontent.XContentType;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * 参考：https://www.easyice.cn/archives/173
+ */
 public class CompressorFactory {
 
     public static final Compressor COMPRESSOR = new DeflateCompressor();

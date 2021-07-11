@@ -42,6 +42,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 详情请参考：https://www.easyice.cn/archives/248
+ */
 public final class Allocators {
     private static class NoopGatewayAllocator extends GatewayAllocator {
         public static final NoopGatewayAllocator INSTANCE = new NoopGatewayAllocator();

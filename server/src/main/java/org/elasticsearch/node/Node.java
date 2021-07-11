@@ -416,6 +416,10 @@ public class Node implements Closeable {
             logger.info("初始化 UsageService  ");
             final UsageService usageService = new UsageService();
 
+            /**
+             * Node是通过NodeBuilder来实例化的，使用google的注入框架Guice的Injector进行注入与获取实例。elasticsearch里面的组件都是用上面的方法进行模块化管理，
+             * elasticsearch对guice进行了封装，通过ModulesBuilder类构建elasticsearch的模块
+             */
             ModulesBuilder modules = new ModulesBuilder();
             // plugin modules must be added here, before others or we can get crazy injection errors...
             for (Module pluginModule : pluginsService.createGuiceModules()) {

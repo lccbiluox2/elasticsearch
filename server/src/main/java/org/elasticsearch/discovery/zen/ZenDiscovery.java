@@ -445,6 +445,8 @@ public class ZenDiscovery extends AbstractLifecycleComponent implements Discover
         if (transportService.getLocalNode().equals(masterNode)) {
             final int requiredJoins = Math.max(0, electMaster.minimumMasterNodes() - 1); // we count as one
             logger.debug("elected as master, waiting for incoming joins ([{}] needed)", requiredJoins);
+            // 等待非主节点的连接到足够数量(投票达到法定人数)，以完成选举
+            // 参考：https://www.easyice.cn/archives/164
             nodeJoinController.waitToBeElectedAsMaster(requiredJoins, masterElectionWaitForJoinsTimeout,
                     new NodeJoinController.ElectionCallback() {
                         @Override
@@ -510,6 +512,9 @@ public class ZenDiscovery extends AbstractLifecycleComponent implements Discover
         while (true) {
             try {
                 logger.trace("joining master {}", masterNode);
+                // 向 Master 发送加入请求,请求发送完毕就认为成功,无论 Master 如何处理.通过集群状态更新线程完成连接
+                // 如果收到的clusterState 中, Master 不是之前选出的,则重新选举.
+                // 参考：https://www.easyice.cn/archives/164
                 membership.sendJoinRequestBlocking(masterNode, transportService.getLocalNode(), joinTimeout);
                 return true;
             } catch (Exception e) {
