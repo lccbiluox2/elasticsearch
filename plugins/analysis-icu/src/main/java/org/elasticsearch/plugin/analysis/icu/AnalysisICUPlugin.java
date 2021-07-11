@@ -50,7 +50,7 @@ import java.util.Map;
 public class AnalysisICUPlugin extends Plugin implements AnalysisPlugin, MapperPlugin {
     @Override
     public Map<String, AnalysisProvider<CharFilterFactory>> getCharFilters() {
-        return singletonMap("icu_normalizer", IcuNormalizerCharFilterFactory::new);
+         return singletonMap("icu_normalizer", IcuNormalizerCharFilterFactory::new);
     }
 
     @Override

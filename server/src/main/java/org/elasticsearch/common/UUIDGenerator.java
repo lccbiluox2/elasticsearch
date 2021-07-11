@@ -21,6 +21,9 @@ package org.elasticsearch.common;
 
 /**
  * Generates opaque unique strings.
+ *
+ *  参考：【Elastischearch】Elastischearch 的 ID 生成器 UUIDGenerator
+ *  https://blog.csdn.net/qq_21383435/article/details/118652263
  */
 interface UUIDGenerator {
     String getBase64UUID();

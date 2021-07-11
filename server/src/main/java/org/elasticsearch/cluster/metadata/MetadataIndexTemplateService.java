@@ -674,6 +674,8 @@ public class MetadataIndexTemplateService {
      * Finds index templates whose index pattern matched with the given index name. In the case of
      * hidden indices, a template with a match all pattern or global template will not be returned.
      *
+     * 查找索引模式与给定索引名称匹配的索引模板。在隐藏索引的情况下，匹配所有模式或全局模板的模板将不会返回。
+     *
      * @param metadata The {@link Metadata} containing all of the {@link IndexTemplateMetadata} values
      * @param indexName The name of the index that templates are being found for
      * @param isHidden Whether or not the index is known to be hidden. May be {@code null} if the index
@@ -732,6 +734,8 @@ public class MetadataIndexTemplateService {
     /**
      * Return the name (id) of the highest matching index template for the given index name. In
      * the event that no templates are matched, {@code null} is returned.
+     *
+     * 返回给定索引名的最高匹配索引模板的名称(id)。如果没有匹配模板，则返回{@code null}。
      */
     @Nullable
     public static String findV2Template(Metadata metadata, String indexName, boolean isHidden) {

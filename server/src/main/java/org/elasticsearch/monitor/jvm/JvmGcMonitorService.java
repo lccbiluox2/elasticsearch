@@ -19,7 +19,7 @@
 
 package org.elasticsearch.monitor.jvm;
 
-import jdk.jfr.Threshold;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;

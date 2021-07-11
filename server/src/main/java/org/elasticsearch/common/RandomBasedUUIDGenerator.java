@@ -26,6 +26,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Random;
 
+/**
+ *
+ *  *  参考：【Elastischearch】Elastischearch 的 ID 生成器 UUIDGenerator
+ *  *  https://blog.csdn.net/qq_21383435/article/details/118652263
+ */
 class RandomBasedUUIDGenerator implements UUIDGenerator {
 
     /**

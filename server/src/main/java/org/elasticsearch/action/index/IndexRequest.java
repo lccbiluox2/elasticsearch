@@ -398,6 +398,8 @@ public class IndexRequest extends ReplicatedWriteRequest<IndexRequest> implement
      * Returns whether or not the pipeline for this request has been resolved by the coordinating node.
      *
      * @return true if the pipeline has been resolved
+     *
+     * 返回此请求的管道是否已由协调节点解决。
      */
     public boolean isPipelineResolved() {
         return this.isPipelineResolved;
@@ -655,6 +657,12 @@ public class IndexRequest extends ReplicatedWriteRequest<IndexRequest> implement
     }
 
 
+    /**
+     * 如果是IndexRequest就调用IndexRequest.process方法，主要是为了解析出timestamp,routing,id,parent 等字段。
+     * @param indexCreatedVersion
+     * @param mappingMd
+     * @param concreteIndex
+     */
     public void process(Version indexCreatedVersion, @Nullable MappingMetadata mappingMd, String concreteIndex) {
         if (mappingMd != null) {
             // might as well check for routing here

@@ -26,6 +26,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * These are essentially flake ids, but we use 6 (not 8) bytes for timestamp, and use 3 (not 2) bytes for sequence number.
  * For more information about flake ids, check out
  * https://archive.fo/2015.07.08-082503/http://www.boundary.com/blog/2012/01/flake-a-decentralized-k-ordered-unique-id-generator-in-erlang/
+ *
+ *  参考：【Elastischearch】Elastischearch 的 ID 生成器 UUIDGenerator
+ *  https://blog.csdn.net/qq_21383435/article/details/118652263
  */
 
 class LegacyTimeBasedUUIDGenerator implements UUIDGenerator {

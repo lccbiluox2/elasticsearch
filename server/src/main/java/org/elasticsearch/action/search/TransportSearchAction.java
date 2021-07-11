@@ -623,6 +623,7 @@ public class TransportSearchAction extends HandledTransportAction<SearchRequest,
                         shardIterators, timeProvider, clusterState, task, clusters);
                     break;
                 case QUERY_THEN_FETCH:
+                    //  参考：https://www.jianshu.com/p/91d03b16af77
                     searchAsyncAction = new SearchQueryThenFetchAsyncAction(logger, searchTransportService, connectionLookup,
                         aliasFilter, concreteIndexBoosts, indexRoutings, searchPhaseController, executor, searchRequest, listener,
                         shardIterators, timeProvider, clusterState, task, clusters);

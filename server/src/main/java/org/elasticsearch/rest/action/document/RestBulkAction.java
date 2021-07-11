@@ -101,6 +101,7 @@ public class RestBulkAction extends BaseRestHandler {
         bulkRequest.add(request.requiredContent(), defaultIndex, defaultType, defaultRouting,
             defaultFetchSourceContext, defaultPipeline, allowExplicitIndex, request.getXContentType());
 
+        //这里的client其实是NodeClient，NodeClient将请求发送到TransportBulkAction类
         return channel -> client.bulk(bulkRequest, new RestStatusToXContentListener<>(channel));
     }
 

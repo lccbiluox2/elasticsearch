@@ -41,6 +41,11 @@ import java.util.function.BiFunction;
 
 import static org.elasticsearch.action.search.SearchPhaseController.getTopDocsSize;
 
+/**
+ * 查询并且获取
+ *
+ *  参考：https://www.jianshu.com/p/91d03b16af77
+ */
 class SearchQueryThenFetchAsyncAction extends AbstractSearchAsyncAction<SearchPhaseResult> {
 
     private final SearchPhaseController searchPhaseController;

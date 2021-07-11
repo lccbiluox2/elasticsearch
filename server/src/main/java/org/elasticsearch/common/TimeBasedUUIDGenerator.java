@@ -29,15 +29,19 @@ import java.util.concurrent.atomic.AtomicLong;
  * structured.
  * For more information about flake ids, check out
  * https://archive.fo/2015.07.08-082503/http://www.boundary.com/blog/2012/01/flake-a-decentralized-k-ordered-unique-id-generator-in-erlang/
+ *
+ *  参考：【Elastischearch】Elastischearch 的 ID 生成器 UUIDGenerator
+ *  https://blog.csdn.net/qq_21383435/article/details/118652263
  */
-
 class TimeBasedUUIDGenerator implements UUIDGenerator {
 
     // We only use bottom 3 bytes for the sequence number.  Paranoia: init with random int so that if JVM/OS/machine goes down, clock slips
     // backwards, and JVM comes back up, we are less likely to be on the same sequenceNumber at the same time:
+    // 我们只使用下面3个字节作为序列号。Paranoia:使用随机int初始化，这样如果JVM/OS/machine宕机，时钟倒退，JVM恢复，
+    // 我们就不太可能同时处于相同的sequenceNumber上:
     private final AtomicInteger sequenceNumber = new AtomicInteger(SecureRandomHolder.INSTANCE.nextInt());
 
-    // Used to ensure clock moves forward:
+    // Used to ensure clock moves forward: 用于确保时钟向前移动:
     private final AtomicLong lastTimestamp = new AtomicLong(0);
 
     private static final byte[] SECURE_MUNGED_ADDRESS = MacAddressProvider.getSecureMungedAddress();
