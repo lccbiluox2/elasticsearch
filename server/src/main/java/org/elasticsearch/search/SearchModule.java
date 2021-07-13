@@ -294,6 +294,11 @@ import static org.elasticsearch.index.query.CommonTermsQueryBuilder.COMMON_TERMS
  * Sets up things that can be done at search time like queries, aggregations, and suggesters.
  */
 public class SearchModule {
+    /**
+     * 优化点：
+     * 静态参数（需要在elasticsearch.yml 中设置）
+     * 限制原因：为了防止搜索子句过多而占用过多的CPU和内存，导致集群性能下降 。
+     */
     public static final Setting<Integer> INDICES_MAX_CLAUSE_COUNT_SETTING = Setting.intSetting("indices.query.bool.max_clause_count",
             1024, 1, Integer.MAX_VALUE, Setting.Property.NodeScope);
 

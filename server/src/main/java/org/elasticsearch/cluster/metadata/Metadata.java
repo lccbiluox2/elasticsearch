@@ -131,6 +131,23 @@ public class Metadata implements Iterable<IndexMetadata>, Diffable<Metadata>, To
         EnumSet<XContentContext> context();
     }
 
+    /**
+     * 优化点：
+     * 适用场景：大数据量的集群分片选型。
+     * 参数：cluster.max_shards_per_node
+     * 默认最大值：1000（7.X版本后）。
+     * 扩展知识：（1）超大规模集群会遇到这个问题：
+     *
+     * 1）每个节点可以存储的分片数和可用的堆内存大小成正比关系。
+     *
+     * 2）Elastic 官方博客文章建议：堆内存和分片的配置比例为1:20，举例：30GB堆内存，最多可有600个分片。
+     *
+     * （2）不合理分配可能问题：
+     *
+     * 1）分片数量过多，写入放大，导致  bulk queue打满，拒绝率上升；
+     *
+     * 2）一定数据量级后，分片数量过少，无法充分利用多节点资源，机器资源不均衡。
+     */
     public static final Setting<Integer> SETTING_CLUSTER_MAX_SHARDS_PER_NODE =
         Setting.intSetting("cluster.max_shards_per_node", 1000, 1, Property.Dynamic, Property.NodeScope);
 
