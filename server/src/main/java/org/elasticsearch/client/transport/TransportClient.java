@@ -88,6 +88,9 @@ import static org.elasticsearch.common.unit.TimeValue.timeValueSeconds;
  *
  * @deprecated {@link TransportClient} is deprecated in favour of the High Level REST client and will
  * be removed in Elasticsearch 8.0.
+ *
+ *
+ * 参考：https://www.pianshen.com/article/3518277756/
  */
 @Deprecated
 public abstract class TransportClient extends AbstractClient {

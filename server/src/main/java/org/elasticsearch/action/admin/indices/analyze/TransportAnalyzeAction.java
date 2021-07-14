@@ -121,6 +121,21 @@ public class TransportAnalyzeAction extends TransportSingleShardAction<AnalyzeAc
         return analyze(request, indicesService.getAnalysis(), indexService, maxTokenCount);
     }
 
+    /**
+     * 这里修复了一个bug 请参考 https://www.jianshu.com/p/662f68840a31
+     *
+     * analyze方法的主要逻辑为：先判断请求参数request对象中是否包含自定义的tokenizer, token filter
+     * 以及char filter, 如果有的话就构建出analyzer或者normalizer, 然后使用构建出的analyzer或者normalizer
+     * 对字符串进行处理；如果请求参数request对象没有自定义的tokenizer, token filter以及char filter方法，
+     * 则使用已经在索引settings中配置好的自定义的analyzer或normalizer，或者使用内置的analyzer对字符串进行进行分析和处理。
+     *
+     * @param request
+     * @param analysisRegistry
+     * @param indexService
+     * @param maxTokenCount
+     * @return
+     * @throws IOException
+     */
     public static AnalyzeAction.Response analyze(AnalyzeAction.Request request, AnalysisRegistry analysisRegistry,
                                           IndexService indexService, int maxTokenCount) throws IOException {
 
